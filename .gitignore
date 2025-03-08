@@ -1,0 +1,6 @@
+congestionEvaluation/node_modules
+congestionEvaluation/.env
+congestionEvaluation/src/calcul
+
+api_Flask/__pycache__/
+api_Flask/src/__pycache__/

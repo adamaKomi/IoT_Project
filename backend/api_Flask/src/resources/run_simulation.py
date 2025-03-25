@@ -8,6 +8,8 @@ from resources.functions.generate_random_accidents import generate_random_accide
 from resources.functions.unit_functions.get_street_names import get_street_names
 from resources.data.database import traffic_collection, accident_collection
 
+# api de calcul des parametres de la congestion
+url_api = 'http://127.0.0.1:5001/api/simulation-data'
 
         
         
@@ -23,13 +25,12 @@ def run_simulation(net_file="./sumo_files/map.net.xml", simulation_duration=1500
     traci.start(sumoCmd)
     
     
-    
-    # api de calcul des parametres de la congestion
-    url_api = 'http://127.0.0.1:5001/api/simulation-data'
 
     # Charger le réseau SUMO pour la conversion des coordonnées
     net = sumolib.net.readNet(net_file)
-    lanes = traci.lanearea.getIDList()  # Récupération une seule fois des détecteurs
+    # Récupération une seule fois des détecteurs
+    lanes = traci.lanearea.getIDList()  
+    
     
     # Les voies qui ont des noms de rue
     street_names = get_street_names(lanes)
@@ -37,6 +38,9 @@ def run_simulation(net_file="./sumo_files/map.net.xml", simulation_duration=1500
     # informations sur les accidents
     accident_details = generate_random_accidents(street_names, net_file, "./sumo_files/accidents.add.xml", num_accidents=100, simulation_duration=1500)
 
+    # vehicule personnel pour le suivie dans la circulation
+    my_vehicule = "personal_vehicule"
+    
     step = 0
     while  step < simulation_duration:
         # avancer la simulation
@@ -54,7 +58,7 @@ def run_simulation(net_file="./sumo_files/map.net.xml", simulation_duration=1500
 
                 max_speed = traci.lane.getMaxSpeed(lane_id)
                 shape_xy = traci.lane.getShape(lane_id)
-
+            
                 # Conversion et inversion des coordonnées
                 shape_geo = [(lat, lon) for lon, lat in [net.convertXY2LonLat(x, y) for x, y in shape_xy]]
 

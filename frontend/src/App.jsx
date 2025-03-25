@@ -1,12 +1,7 @@
-import MapComponent from './components/map/MapComponent';
-import MainPage from './pages/main/MainPage';
+import MainLayout from "./components/Layout/MainLayout";
 
 function App() {
-
-  
-  return (
-    <MainPage/>
-  );
+  return <MainLayout />;
 }
 
 export default App;

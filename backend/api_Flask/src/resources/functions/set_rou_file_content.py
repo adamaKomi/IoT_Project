@@ -56,6 +56,23 @@ def set_rou_file_content(net_file="../sumo_files/map.net.xml", rou_file="../sumo
     # Compteur unique pour les IDs des véhicules
     vehicle_counter = 0
     
+    # Créer le vehicule personnel qui servira au monitoring de la congestion
+    vehicle = ET.SubElement(
+        new_root,
+        "vehicle",
+        id="personal_vehicule",
+        depart="0",
+        type="taxi"  # Utilisation du vType correspondant
+    )
+    
+    edge_id = random.choice(edge_ids)
+    # Ajouter l'élément <route> à l'intérieur de <vehicle>
+    ET.SubElement(
+        vehicle,
+        "route",
+        edges="-301973121#0"
+    )
+    
     # Générer les véhicules
     for indice in range(depart_max_time):
         nb_vehs = random.randint(0, 20)

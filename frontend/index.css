@@ -1,10 +1,11 @@
+body {
+  background-color: darkslategrey;
+}
 
-body{
-    width: 100vw;
-    padding: 0;
-    margin: 0;
+/* Styles pour la carte */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
 }
-#root{
-    width: 100% !important;
-    height: 100%;
-}
+
+/* Styles Bootstrap personnalisés si nécessaire */

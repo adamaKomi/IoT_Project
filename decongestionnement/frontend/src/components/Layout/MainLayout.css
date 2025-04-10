@@ -2,7 +2,7 @@
 .main-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Prend toute la hauteur de la fenêtre */
+  height: fit-content; /* Prend toute la hauteur de la fenêtre */
   padding: 1rem;
   background-color: darkslategrey;
 }

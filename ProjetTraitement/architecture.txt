@@ -1,0 +1,40 @@
+TraitementAccident
+│   backend
+│   ├── models
+│   │   ├── Accident.js
+│   │   └── Stats.js
+│   ├── routes
+│   │   └── accidents.js
+│   ├── services
+│   │   ├── cleanData.js
+│   │   ├── Crash_N_last_year.js
+│   │   ├── CrashperPeriod.js
+│   │   ├── fetchNYCData.js
+│   │   ├── riskByZone.js
+│   │   └── Topdangerous.js
+│   ├── .env
+│   ├── package-lock.json
+│   ├── package.json
+│   └── server.js
+│   backend_prediction
+│   └── server.py
+│   traffic-visualization
+│   ├── src
+│   │   ├── components
+│   │   │   ├── AccidentPrediction.jsx
+│   │   │   ├── AccidentTable.jsx
+│   │   │   ├── api.jsx
+│   │   │   ├── Chart.jsx
+│   │   │   ├── ErrorMessage.jsx
+│   │   │   ├── LoadingSpinner.jsx
+│   │   │   ├── StreetSelector.jsx
+│   │   │   └── Traffic.jsx
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   └── vite.config.js

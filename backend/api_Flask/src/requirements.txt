@@ -1,5 +1,0 @@
-Flask==3.1.0
-pymongo==4.11.3
-Requests==2.32.3
-sumolib==1.22.0
-traci==1.22.0

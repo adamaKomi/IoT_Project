@@ -1,5 +1,101 @@
+
+
+# --- Node.js (Express) ---
+*node_modules/
+*npm-debug.log*
+*yarn-debug.log*
+*yarn-error.log*
+*package-lock.json
+*.env
+
+# Logs
+*logs
+*.log
+*logs/*.log
+
+# Build output
+*dist/
+*build/
+
+# Coverage
+*coverage/
+*.nyc_output/
+
+# PM2 logs
+*pids
+*.pid
+*.seed
+*.pid.lock
+
+# --- ReactJS (Vite) ---
+*.vite/
+*vite.config.js.*
+*.tsbuildinfo
+
+# Cache & build
+*.cache/
+*.cache
+*.temp
+*.tmp
+
+# Mac/Linux/Windows system files
+*.DS_Store
+*Thumbs.db
+
+# --- Flask ---
+*.pyc
+*__pycache__/
+*instance/
+*.env
+*.env.*
+*.sqlite3
+*.db
+
+# Flask virtual environments
+*venv/
+*env/
+*ENV/
+*.venv/
+
 **/__pycache__/
 
-**/node_modules/
+# Flask config/secrets
+*config.py
+*.pem
+*.key
 
-**/.env
+# PyInstaller
+*.spec
+*dist/
+*build/
+
+# pytest
+*.pytest_cache/
+*htmlcov/
+
+# --- General ---
+*.idea/
+*.vscode/
+*.vscode
+*.swp
+*.swo
+
+# --- Docker ---
+*.tar
+*.img
+*.bak
+
+# --- Coverage reports ---
+*coverage.xml
+*.cover
+*.pyc
+*.cache/
+
+# --- Git ---
+.git/
+
+# Optional: Ignore OS or editor backup files
+*~
+*.bak
+*.orig
+*.tmp

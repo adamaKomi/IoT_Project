@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alertes de Congestion Routière</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container-fluid vh-100 d-flex flex-column p-3">
+        <header class="mb-4 text-center">
+            <h1><i class="fas fa-traffic-light"></i> Système d'Alertes de Trafic</h1>
+            <p>Recevez des informations en temps réel sur les conditions de trafic et trouvez des itinéraires alternatifs</p>
+        </header>
+
+        <div class="row flex-grow-1 g-3">
+            <!-- Carte à gauche -->
+            <div class="col-md-8 h-100">
+                <div class="card h-100 shadow">
+                    <div class="card-body p-0">
+                        <div id="traffic-map-root" class="h-100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenu HTML à droite -->
+            <div class="col-md-4 h-100 d-flex flex-column">
+                <div class="card h-100 shadow overflow-auto">
+                    <div class="card-body">
+                        <div class="route-form">
+                            <h2>Planifiez votre trajet</h2>
+                            <form id="routeForm">
+                                <div class="input-group">
+                                    <label for="startPoint"><i class="fas fa-map-marker-alt"></i> Point de départ</label>
+                                    <input type="text" id="startPoint" placeholder="Coordonnées de départ (ex: 33.689, -7.384)" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="destination"><i class="fas fa-flag-checkered"></i> Destination</label>
+                                    <input type="text" id="destination" placeholder="Coordonnées de destination (ex: 33.692, -7.381)" required>
+                                </div>
+                                <button type="submit" class="btn primary-btn">Trouver un itinéraire</button>
+                            </form>
+                        </div>
+
+                        <div class="alerts-container">
+                            <h2>Alertes de Congestion Actives</h2>
+                            <div id="alertsList" class="alerts-list">
+                                <p class="loading">Chargement des alertes...</p>
+                            </div>
+                        </div>
+
+                        <div class="route-results">
+                            <h2>Votre Itinéraire</h2>
+                            <div class="route-tabs">
+                                <button class="tab-btn active" data-tab="originalRoute">Itinéraire initial</button>
+                                <button class="tab-btn" data-tab="alternativeRoute">Itinéraire alternatif</button>
+                            </div>
+                            <div id="originalRoute" class="route-tab-content active">
+                                <div id="originalRouteDetails" class="route-details">
+                                    <p class="no-route">Veuillez saisir un point de départ et une destination.</p>
+                                </div>
+                            </div>
+                            <div id="alternativeRoute" class="route-tab-content">
+                                <div id="alternativeRouteDetails" class="route-details">
+                                    <p class="no-route">Des alternatives seront proposées si des congestions sont détectées.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dépendances JavaScript -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="script.js"></script>
+    <!-- Scripts React (à générer avec votre build) -->
+    <script type="module" src="/dist/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,951 @@
+﻿--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\.flaskenv
+Taille: 55 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+FLASK_APP=wsgi.py
+FLASK_ENV=development
+FLASK_DEBUG=1
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app.py
+Taille: 180 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+from app import create_app
+from config.settings import ProductionConfig
+
+app = create_app(ProductionConfig)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=3600)
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\extensions.py
+Taille: 54 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+from flask_pymongo import PyMongo
+
+mongo = PyMongo()
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\__init__.py
+Taille: 605 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+from flask import Flask
+from config.settings import Config
+from flask_cors import CORS
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    CORS(app)
+    app.config.from_object(config_class)
+    
+    # Initialize extensions
+    from .extensions import mongo
+    mongo.init_app(app)
+    
+    # Initialize services
+    from .services.simulation import SimulationService
+    app.simulation_service = SimulationService(app.config)
+    
+    # Register blueprints
+    from .routes.api import api_bp
+    app.register_blueprint(api_bp, url_prefix='/api/v1')
+    
+    return app
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\models\traffic.py
+Taille: 1156 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+from datetime import datetime
+from ..extensions import mongo
+from bson import ObjectId
+
+class TrafficData:
+    @staticmethod
+    def get_collection():
+        return mongo.db.traffic_data
+    
+    @staticmethod
+    def create_indexes():
+        """Ensure proper indexes exist"""
+        TrafficData.get_collection().create_index("lane_id", unique=True)
+        TrafficData.get_collection().create_index("timestamp")
+    
+    @staticmethod
+    def upsert_lane_data(lane_id, data):
+        """Insert or update lane data"""
+        data['updated_at'] = datetime.utcnow()
+        return TrafficData.get_collection().update_one(
+            {"lane_id": lane_id},
+            {"$set": data},
+            upsert=True
+        )
+    
+    @staticmethod
+    def get_lane_data(lane_id):
+        """Get data for a specific lane"""
+        return TrafficData.get_collection().find_one({"lane_id": lane_id})
+    
+    @staticmethod
+    def get_latest_data(limit=100):
+        """Get latest traffic data"""
+        return list(TrafficData.get_collection().find()
+                   .sort("timestamp", -1)
+                   .limit(limit))
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\models\__init__.py
+Taille: 67 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+# Import models for easier access
+from .traffic import TrafficData
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\routes\api.py
+Taille: 4356 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+# app/routes/api.py
+from flask import Blueprint, jsonify, request, current_app
+from ..services.simulation import SimulationService
+from ..services.traffic_data import TrafficDataService
+from ..services.sumo_utils import SumoUtilsService
+from ..utils.decorators import handle_errors
+
+api_bp = Blueprint('api', __name__)
+
+# Dans app/routes/api.py
+@api_bp.route('/start-simulation', methods=['POST'])
+@handle_errors
+def start_simulation():
+    """Start the traffic simulation"""
+    data = request.get_json() or {}
+    duration = data.get('duration', 1500)
+    
+    # Utiliser l'instance stockÃ©e dans l'application
+    result = current_app.simulation_service.run_simulation(simulation_duration=duration)
+    return jsonify(result), 200 if result["status"] != "error" else 400
+
+@api_bp.route('/stop-simulation', methods=['POST'])
+@handle_errors
+def stop_simulation():
+    """Stop the running traffic simulation"""
+    result = current_app.simulation_service.stop_simulation()
+    return jsonify(result), 200 if result["status"] != "error" else 400
+
+# @api_bp.route('/simulation-status', methods=['GET'])
+# @handle_errors
+# def simulation_status():
+#     """Get the current simulation status"""
+#     status = {
+#         "running": current_app.simulation_service.simulation_running,
+#     }
+#     return jsonify(status), 200
+
+
+@api_bp.route('/pause-simulation', methods=['POST'])
+@handle_errors
+def pause_simulation():
+    """Pause the running simulation"""
+    result = current_app.simulation_service.pause_simulation()
+    return jsonify(result), 200 if result["status"] != "error" else 400
+
+@api_bp.route('/resume-simulation', methods=['POST'])
+@handle_errors
+def resume_simulation():
+    """Resume a paused simulation"""
+    result = current_app.simulation_service.resume_simulation()
+    return jsonify(result), 200 if result["status"] != "error" else 400
+
+# Mettez Ã  jour aussi la mÃ©thode get_simulation_status
+@api_bp.route('/simulation-status', methods=['GET'])
+@handle_errors
+def simulation_status():
+    """Get the current simulation status"""
+    status = current_app.simulation_service.get_simulation_status()
+    return jsonify({
+        "status": "success",
+        "data": {
+            "running": status["running"],
+            "paused": status.get("paused", False),
+            "traci_connected": status["traci_connected"],
+            "current_step": status.get("current_step", 0)
+        }
+    }), 200
+
+@api_bp.route('/prepare-simulation', methods=['POST'])
+@handle_errors
+def prepare_simulation():
+    """Prepare SUMO files for simulation"""
+    sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
+    files = sumo_utils.prepare_simulation_files()
+    return jsonify({"status": "success", "files": files}), 200
+
+@api_bp.route('/traffic-data', methods=['GET'])
+@handle_errors
+def get_traffic_data():
+    """Get recent traffic data"""
+    hours = request.args.get('hours', 1, type=int)
+    traffic_service = TrafficDataService()
+    data = traffic_service.get_recent_traffic_data(hours=hours)
+    return jsonify({"status": "success", "count": len(data), "data": data}), 200
+
+@api_bp.route('/congestion-stats', methods=['GET'])
+@handle_errors
+def get_congestion_stats():
+    """Get congestion statistics"""
+    traffic_service = TrafficDataService()
+    stats = traffic_service.get_congestion_stats()
+    return jsonify({"status": "success", "data": stats}), 200
+
+@api_bp.route('/lane-data/<lane_id>', methods=['GET'])
+@handle_errors
+def get_lane_data(lane_id):
+    """Get historical data for a specific lane"""
+    limit = request.args.get('limit', 100, type=int)
+    traffic_service = TrafficDataService()
+    data = traffic_service.get_lane_history(lane_id, limit=limit)
+    return jsonify({"status": "success", "count": len(data), "data": data}), 200
+
+@api_bp.route('/network-metadata', methods=['GET'])
+@handle_errors
+def get_network_metadata():
+    """Get network metadata"""
+    sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
+    metadata = sumo_utils.extract_network_metadata()
+    return jsonify({"status": "success", "data": metadata}), 200
+
+@api_bp.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({"status": "healthy"}), 200
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\routes\__init__.py
+Taille: 62 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+# Import blueprints for easier access
+from .api import api_bp
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\services\simulation.py
+Taille: 7570 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+# app/services/simulation.py
+import os
+import traci
+import time
+import sumolib
+from ..models.traffic import TrafficData
+from ..utils.sumo_helpers import configure_simulation, get_street_names
+import requests
+import threading
+
+
+
+
+
+class SimulationService:
+    def __init__(self, config):
+        self.config = config
+        self.sumo_config_path = getattr(config, 'SUMO_CONFIG_PATH', 
+                            os.path.join(os.path.dirname(__file__), '../../app/static/sumo_files'))
+        self.api_url = getattr(config, 'API_URL', 'http://127.0.0.1:5001/api/simulation-data')
+        self.simulation_running = False
+        self.simulation_paused = False  # Nouvel Ã©tat pour la pause
+        self.simulation_thread = None
+        self.traci_connection_active = False
+        self.pause_event = threading.Event()  # Pour gÃ©rer la pause
+        self.current_step = 0  # Pour suivre la progression
+            
+    def run_simulation(self, simulation_duration=1500):
+        """Run the SUMO simulation and collect traffic data"""
+        if self.simulation_running:
+            return {"status": "error", "message": "Simulation already running"}
+            
+        if self.traci_connection_active:
+            try:
+                traci.close()
+            except:
+                pass
+            self.traci_connection_active = False
+            time.sleep(1)  # Petite pause
+        
+        # Start simulation in a separate thread
+        self.simulation_running = True
+        self.simulation_thread = threading.Thread(
+            target=self._run_simulation_thread,
+            args=(simulation_duration,)
+        )
+        self.simulation_thread.start()
+        
+        return {"status": "started", "message": "Simulation started successfully"}
+    
+    def pause_simulation(self):
+        """Pause the running simulation"""
+        if not self.simulation_running:
+            return {"status": "error", "message": "No simulation is running"}
+        if self.simulation_paused:
+            return {"status": "error", "message": "Simulation already paused"}
+            
+        self.simulation_paused = True
+        self.pause_event.set()  # Bloquer le thread
+        return {"status": "paused", "message": "Simulation paused"}
+
+    def resume_simulation(self):
+        """Resume a paused simulation"""
+        if not self.simulation_running:
+            return {"status": "error", "message": "No simulation is running"}
+        if not self.simulation_paused:
+            return {"status": "error", "message": "Simulation is not paused"}
+            
+        self.simulation_paused = False
+        self.pause_event.clear()  # DÃ©bloquer le thread
+        return {"status": "resumed", "message": "Simulation resumed"}
+
+    def _run_simulation_thread(self, simulation_duration):
+        """Run simulation in a separate thread"""
+        try:
+            if self.traci_connection_active:
+                traci.close()
+                time.sleep(1)
+                self.traci_connection_active = False
+
+            sumo_cmd = configure_simulation(self.sumo_config_path)
+            traci.start(sumo_cmd)
+            self.traci_connection_active = True
+            
+            net = sumolib.net.readNet(f"{self.sumo_config_path}/map.net.xml")
+            lanes = traci.lanearea.getIDList()
+            street_names = get_street_names(lanes)
+            
+            for step in range(self.current_step, simulation_duration):
+                if not self.simulation_running:
+                    break
+                    
+                # Gestion de la pause
+                if self.pause_event.is_set():
+                    while self.pause_event.is_set() and self.simulation_running:
+                        time.sleep(0.1)  # Attente active
+                    if not self.simulation_running:
+                        break
+                
+                traci.simulationStep()
+                self.current_step = step  # Sauvegarde du pas actuel
+                self._process_lane_data(net, lanes)
+                self._notify_api(step)
+                
+        except Exception as e:
+            print(f"Simulation error: {e}")
+        finally:
+            if self.traci_connection_active:
+                try:
+                    traci.close()
+                except:
+                    pass
+            self.traci_connection_active = False
+            self.simulation_running = False
+            self.simulation_paused = False
+            self.current_step = 0  # RÃ©initialisation
+    
+    def get_simulation_status(self):
+        """Get current simulation status"""
+        return {
+            "running": self.simulation_running,
+            "paused": self.simulation_paused,
+            "traci_connected": self.traci_connection_active,
+            "current_step": self.current_step,
+            "thread_alive": self.simulation_thread.is_alive() if self.simulation_thread else False
+        }
+    
+    def stop_simulation(self):
+        """Stop the running simulation"""
+        if not self.simulation_running:
+            return {"status": "error", "message": "No simulation is running"}
+            
+        self.simulation_running = False
+        self.simulation_paused = False
+        self.pause_event.clear()  # DÃ©bloquer le thread si en pause
+        
+        if self.simulation_thread and self.simulation_thread.is_alive():
+            self.simulation_thread.join(timeout=10)
+            
+        self.current_step = 0  # RÃ©initialiser le compteur
+        return {"status": "stopped", "message": "Simulation stopped successfully"}
+    
+    def _process_lane_data(self, net, lanes):
+        """Process and store data for each lane"""
+        for lane_id in lanes:
+            try:
+                lane_data = self._collect_lane_data(net, lane_id)
+                TrafficData.upsert_lane_data(lane_id, lane_data)
+            except Exception as e:
+                print(f"Error processing lane {lane_id}: {e}")
+    
+    def _collect_lane_data(self, net, lane_id):
+        """Collect data for a single lane"""
+        vehicle_ids = traci.lanearea.getLastStepVehicleIDs(lane_id)
+        
+        return {
+            "lane_id": lane_id,
+            "timestamp": time.time(),
+            "lane_length": traci.lanearea.getLength(lane_id),
+            "vehicles": self._get_vehicle_info(vehicle_ids),
+            "halting_number": traci.lanearea.getLastStepHaltingNumber(lane_id),
+            "max_speed": traci.lane.getMaxSpeed(lane_id),
+            "shape": self._get_lane_shape(net, lane_id)
+        }
+    
+    def _get_vehicle_info(self, vehicle_ids):
+        return [{
+            "vehicle_id": str(id),
+            "speed": traci.vehicle.getSpeed(id),
+            "length": traci.vehicle.getLength(id),
+            "minGap": traci.vehicle.getMinGap(id),
+            "type": traci.vehicle.getTypeID(id),
+        } for id in vehicle_ids]
+    
+    def _get_lane_shape(self, net, lane_id):
+        shape_xy = traci.lane.getShape(lane_id)
+        return [(lat, lon) for lon, lat in [net.convertXY2LonLat(x, y) for x, y in shape_xy]]
+    
+    def _notify_api(self, step):
+        """Notify external API about simulation progress"""
+        try:
+            response = requests.post(self.api_url, json={"step": step})
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            print(f"API notification error: {e}")
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\services\sumo_utils.py
+Taille: 2351 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+import os
+import xml.etree.ElementTree as ET
+from ..utils.file_handlers import read_xml_file, write_json_file
+from ..utils.sumo_helpers import generate_route_file, generate_sensors_file
+
+class SumoUtilsService:
+    def __init__(self, config_path):
+        self.config_path = config_path
+        
+    def prepare_simulation_files(self):
+        """Prepare all necessary SUMO files for simulation"""
+        net_file = os.path.join(self.config_path, "map.net.xml")
+        rou_file = os.path.join(self.config_path, "map.rou.xml")
+        sensors_file = os.path.join(self.config_path, "sensors.add.xml")
+        
+        # Generate route file if it doesn't exist
+        if not os.path.exists(rou_file):
+            generate_route_file(net_file, rou_file)
+            
+        # Generate sensors file if it doesn't exist
+        if not os.path.exists(sensors_file):
+            generate_sensors_file(net_file, sensors_file)
+            
+        return {
+            "net_file": net_file,
+            "rou_file": rou_file,
+            "sensors_file": sensors_file
+        }
+    
+    def extract_network_metadata(self):
+        """Extract network metadata from SUMO network file"""
+        net_file = os.path.join(self.config_path, "map.net.xml")
+        tree = read_xml_file(net_file)
+        root = tree.getroot()
+        
+        # Extract network boundaries
+        location = root.find("location")
+        boundaries = {
+            "net_offset": location.get("netOffset", "0,0"),
+            "conv_boundary": location.get("convBoundary", "0,0,0,0"),
+            "orig_boundary": location.get("origBoundary", "0,0,0,0"),
+            "proj_projection": location.get("projParameter", "")
+        }
+        
+        # Count edges, junctions, etc.
+        junctions = root.findall("junction")
+        edges = root.findall("edge")
+        connections = root.findall("connection")
+        
+        metadata = {
+            "boundaries": boundaries,
+            "junctions_count": len(junctions),
+            "edges_count": len(edges),
+            "connections_count": len(connections)
+        }
+        
+        # Save metadata to file
+        metadata_file = os.path.join(self.config_path, "network_metadata.json")
+        write_json_file(metadata_file, metadata)
+        
+        return metadata
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\services\traffic_data.py
+Taille: 1561 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+from datetime import datetime, timedelta
+from ..models.traffic import TrafficData
+from typing import Dict, List, Optional
+
+class TrafficDataService:
+    @staticmethod
+    def get_recent_traffic_data(hours: int = 1) -> List[Dict]:
+        """Get traffic data from the last N hours"""
+        cutoff = datetime.utcnow() - timedelta(hours=hours)
+        return list(TrafficData.get_collection().find({
+            "timestamp": {"$gte": cutoff.timestamp()}
+        }).sort("timestamp", -1))
+    
+    @staticmethod
+    def get_congestion_stats() -> Dict:
+        """Calculate congestion statistics"""
+        pipeline = [
+            {"$group": {
+                "_id": None,
+                "avg_halting": {"$avg": "$halting_number"},
+                "max_halting": {"$max": "$halting_number"},
+                "total_lanes": {"$addToSet": "$lane_id"}
+            }},
+            {"$project": {
+                "average_halting_vehicles": "$avg_halting",
+                "max_halting_vehicles": "$max_halting",
+                "total_monitored_lanes": {"$size": "$total_lanes"}
+            }}
+        ]
+        
+        result = list(TrafficData.get_collection().aggregate(pipeline))
+        return result[0] if result else {}
+    
+    @staticmethod
+    def get_lane_history(lane_id: str, limit: int = 100) -> List[Dict]:
+        """Get historical data for a specific lane"""
+        return list(TrafficData.get_collection().find({"lane_id": lane_id})
+                   .sort("timestamp", -1)
+                   .limit(limit))
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\services\__init__.py
+Taille: 166 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+# Import services for easier access
+from .simulation import SimulationService
+from .traffic_data import TrafficDataService
+from .sumo_utils import SumoUtilsService
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\utils\decorators.py
+Taille: 1086 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+from functools import wraps
+from flask import jsonify
+import traceback
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def handle_errors(f):
+    """Decorator to handle errors and return JSON responses"""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except ValueError as e:
+            logger.warning(f"Validation error: {str(e)}")
+            return jsonify({"error": str(e)}), 400
+        except FileNotFoundError as e:
+            logger.warning(f"File not found: {str(e)}")
+            return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logger.error(f"Unexpected error: {traceback.format_exc()}")
+            return jsonify({"error": "Internal server error"}), 500
+    return wrapper
+
+def validate_simulation_config(f):
+    """Decorator to validate simulation configuration"""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        # Add validation logic here
+        return f(*args, **kwargs)
+    return wrapper
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\utils\file_handlers.py
+Taille: 1404 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+import os
+import json
+import xml.etree.ElementTree as ET
+from typing import Dict, Any, Optional
+
+def read_json_file(file_path: str) -> Dict[str, Any]:
+    """Read JSON file and return its content"""
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File {file_path} not found")
+    
+    with open(file_path, 'r', encoding='utf-8') as file:
+        return json.load(file)
+
+def write_json_file(file_path: str, data: Dict[str, Any]) -> None:
+    """Write data to JSON file"""
+    with open(file_path, 'w', encoding='utf-8') as file:
+        json.dump(data, file, indent=4)
+
+def read_xml_file(file_path: str) -> ET.ElementTree:
+    """Read XML file and return ElementTree"""
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File {file_path} not found")
+    
+    try:
+        return ET.parse(file_path)
+    except ET.ParseError as e:
+        raise ValueError(f"Error parsing XML file: {str(e)}")
+
+def get_float_value(element: ET.Element, attribute: str, default: Optional[float] = None) -> Optional[float]:
+    """Get float value from XML element attribute"""
+    value = element.get(attribute)
+    return float(value) if value is not None else default
+
+def ensure_directory_exists(dir_path: str) -> None:
+    """Ensure directory exists, create if it doesn't"""
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\utils\sumo_helpers.py
+Taille: 4989 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+# app/utils/sumo_helpers.py
+import traci
+import xml.etree.ElementTree as ET
+import sumolib
+import random
+import os
+from typing import Dict, List, Optional
+
+def configure_simulation(sumo_config_path: str) -> List[str]:
+    """Configure SUMO simulation command"""
+    return [
+        "sumo-gui",
+        "-c", f"{sumo_config_path}/map.sumo.cfg",
+        "--delay", "0",
+        "--start",
+        "--scale", "5",
+        "--quit-on-end",  # Ajout de cette option pour fermer proprement
+        "--no-internal-links",  # Ignore les liens internes
+    ]
+
+def get_street_names(lanes: List[str]) -> Dict[str, str]:
+    """Get street names for lanes"""
+    return {
+        lane_id: traci.edge.getStreetName(lane_id.rsplit("_", 1)[0])
+        for lane_id in lanes
+        if traci.edge.getStreetName(lane_id.rsplit("_", 1)[0])
+    }
+
+def generate_route_file(net_file: str, rou_file: str, depart_max_time: int = 1000) -> None:
+    """Generate SUMO route file with random vehicles"""
+    if not os.path.exists(net_file):
+        raise FileNotFoundError(f"Network file {net_file} not found")
+    
+    try:
+        net = sumolib.net.readNet(net_file)
+        edge_ids = [edge.getID() for edge in net.getEdges() 
+                   if edge.allows("passenger") and not edge.getID().startswith(":")]
+        
+        if not edge_ids:
+            raise ValueError("No valid edges found in network file")
+        
+        # Create XML structure
+        root = ET.Element("routes")
+        root.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+        root.set("xsi:noNamespaceSchemaLocation", "http://sumo.dlr.de/xsd/routes_file.xsd")
+        
+        # Define vehicle types
+        vehicle_types = [
+            {"id": "taxi", "length": "4.5", "minGap": "2.5"},
+            {"id": "truck", "length": "10.0", "minGap": "3.0"},
+            {"id": "motorcycle", "length": "2.0", "minGap": "1.0"}
+        ]
+        
+        for vtype in vehicle_types:
+            ET.SubElement(root, "vType", **vtype)
+        
+        # Add monitoring vehicle
+        monitoring_vehicle = ET.SubElement(root, "vehicle", 
+                                         id="monitoring_veh",
+                                         depart="0",
+                                         type="taxi")
+        ET.SubElement(monitoring_vehicle, "route", edges=random.choice(edge_ids))
+        
+        # Add random vehicles
+        for step in range(depart_max_time):
+            for _ in range(random.randint(0, 20)):
+                vehicle_id = f"veh_{step}_{random.randint(0, 1000)}"
+                vehicle = ET.SubElement(root, "vehicle",
+                                      id=vehicle_id,
+                                      depart=str(step),
+                                      type=random.choice(vehicle_types)["id"])
+                ET.SubElement(vehicle, "route", edges=random.choice(edge_ids))
+        
+        # Write to file
+        tree = ET.ElementTree(root)
+        tree.write(rou_file, encoding="utf-8", xml_declaration=True)
+        
+    except Exception as e:
+        raise RuntimeError(f"Error generating route file: {str(e)}")
+
+def generate_sensors_file(net_file: str, sensors_file: str) -> None:
+    """Generate SUMO sensors configuration file"""
+    if not os.path.exists(net_file):
+        raise FileNotFoundError(f"Network file {net_file} not found")
+    
+    try:
+        tree = ET.parse(net_file)
+        root = tree.getroot()
+        new_root = ET.Element("additional")
+        
+        for edge in root.findall("edge"):
+            edge_id = edge.get("id")
+            if not edge_id:
+                continue
+            
+            for lane in edge.findall("lane"):
+                lane_id = lane.get("id")
+                lane_length = lane.get("length")
+                
+                if not lane_id or not lane_length:
+                    continue
+                
+                ET.SubElement(new_root, "laneAreaDetector",
+                             id=lane_id,
+                             lanes=lane_id,
+                             pos="0",
+                             endPos=lane_length,
+                             friendlyPos="true",
+                             period="60",
+                             file="traffic_data.xml",
+                             timeThreshold="2.0",
+                             speedThreshold="5.0",
+                             jamThreshold="75.0",
+                             length=lane_length)
+        
+        tree = ET.ElementTree(new_root)
+        tree.write(sensors_file, encoding="utf-8", xml_declaration=True)
+        
+    except Exception as e:
+        raise RuntimeError(f"Error generating sensors file: {str(e)}")
+
+def get_lane_info(net_file: str, lanes_file: str) -> None:
+    """Extract lane information from network file"""
+    # Implementation from your original getLanes_info function
+    pass
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\utils\__init__.py
+Taille: 250 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+# Import utility modules for easier access
+from .file_handlers import read_json_file, write_json_file, read_xml_file
+from .sumo_helpers import configure_simulation, get_street_names
+from .decorators import handle_errors, validate_simulation_config
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\config\init.py
+Taille: 408 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+from .settings import Config, DevelopmentConfig, TestingConfig, ProductionConfig
+
+# Function to choose the right configuration
+def get_config(config_name):
+    config_dict = {
+        'development': DevelopmentConfig,
+        'testing': TestingConfig,
+        'production': ProductionConfig,
+        'default': DevelopmentConfig
+    }
+    return config_dict.get(config_name, config_dict['default'])
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\config\production.py
+Taille: 497 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+from .settings import Config
+import os
+
+class ProductionConfig(Config):
+    MONGO_URI = os.getenv('MONGO_URI', 'mongodb://mongo:27017/')
+    SUMO_CONFIG_PATH = '/app/sumo_files'  # For Docker container
+    API_URL = os.getenv('API_URL', 'http://api-service:5001/api/simulation-data')
+    
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+        # Production-specific initialization
+        app.config['MONGO_CONNECT'] = False  # For better connection handling
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\config\settings.py
+Taille: 626 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key')
+    MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/')
+    # Ajoutez cette ligne pour le chemin SUMO
+    SUMO_CONFIG_PATH = os.path.join(os.path.dirname(__file__), '../app/static/sumo_files')
+    API_URL = os.getenv('API_URL', 'http://127.0.0.1:5001/api/simulation-data')
+    
+class DevelopmentConfig(Config):
+    DEBUG = True
+
+class TestingConfig(Config):
+    TESTING = True
+    MONGO_URI = 'mongodb://localhost:27017/test_db'
+
+class ProductionConfig(Config):
+    pass
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\config\__init__.py
+Taille: 579 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key')
+    MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/')
+    SUMO_CONFIG_PATH = os.path.join(os.path.dirname(__file__), '../app/static/sumo_files')
+    API_URL = os.getenv('API_URL', 'http://127.0.0.1:5001/api/simulation-data')
+    
+class DevelopmentConfig(Config):
+    DEBUG = True
+
+class TestingConfig(Config):
+    TESTING = True
+    MONGO_URI = 'mongodb://localhost:27017/test_db'
+
+class ProductionConfig(Config):
+    pass
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\tests\conftest.py
+Taille: 349 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+import pytest
+from app import create_app
+from config.settings import TestingConfig
+from ..extensions import mongo
+
+@pytest.fixture
+def app():
+    app = create_app(TestingConfig)
+    with app.app_context():
+        mongo.db.drop_collection('traffic_data')
+        yield app
+
+@pytest.fixture
+def client(app):
+    return app.test_client()
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\tests\__init__.py
+Taille: 0 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\tests\integration\test_api.py
+Taille: 1118 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+import json
+import pytest
+from unittest.mock import patch
+
+@patch('app.routes.api.SimulationService')
+def test_start_simulation_endpoint(mock_sim_service, client):
+    """Test the start simulation endpoint"""
+    # Setup mock
+    mock_instance = mock_sim_service.return_value
+    mock_instance.run_simulation.return_value = {"steps": 1500}
+    
+    # Make request
+    response = client.post('/api/v1/start-simulation', 
+                          data=json.dumps({"duration": 100}),
+                          content_type='application/json')
+    
+    # Check response
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data["status"] == "success"
+    assert "Simulation completed" in data["message"]
+    
+    # Verify mock was called correctly
+    mock_instance.run_simulation.assert_called_once_with(simulation_duration=100)
+
+def test_health_check(client):
+    """Test health check endpoint"""
+    response = client.get('/api/v1/health')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data["status"] == "healthy"
+--------------------------------------------------
+Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\tests\unit\test_simulation.py
+Taille: 1713 octets
+Date de modification: 04/14/2025 00:18:42
+Contenu:
+import pytest
+from unittest.mock import patch, MagicMock
+from app.services.simulation import SimulationService
+
+def test_init_simulation_service():
+    """Test initialization of simulation service"""
+    mock_config = MagicMock()
+    mock_config.SUMO_CONFIG_PATH = "/mock/path"
+    mock_config.API_URL = "http://mock-api.com"
+    
+    service = SimulationService(mock_config)
+    assert service.sumo_config_path == "/mock/path"
+    assert service.api_url == "http://mock-api.com"
+
+@patch('app.services.simulation.traci')
+@patch('app.services.simulation.configure_simulation')
+def test_run_simulation(mock_configure, mock_traci):
+    """Test running simulation"""
+    # Setup mocks
+    mock_config = MagicMock()
+    mock_config.SUMO_CONFIG_PATH = "/mock/path"
+    mock_config.API_URL = "http://mock-api.com"
+    
+    mock_configure.return_value = ["mock", "cmd"]
+    mock_traci.lanearea.getIDList.return_value = ["lane_1", "lane_2"]
+    
+    # Run simulation with shorter duration for testing
+    service = SimulationService(mock_config)
+    service._process_lane_data = MagicMock()  # Mock processing to avoid actual data handling
+    service._notify_api = MagicMock()  # Mock API notification
+    
+    service.run_simulation(simulation_duration=5)
+    
+    # Verify simulation setup
+    mock_configure.assert_called_once_with("/mock/path")
+    mock_traci.start.assert_called_once_with(["mock", "cmd"])
+    
+    # Verify simulation steps
+    assert mock_traci.simulationStep.call_count == 5
+    assert service._process_lane_data.call_count == 5
+    assert service._notify_api.call_count == 5
+    
+    # Verify simulation cleanup
+    mock_traci.close.assert_called_once()

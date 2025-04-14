@@ -1,4 +1,11 @@
 const congestionEvaluation = (data) => {
+
+    if (!data || data.length === 0) {
+        console.log("ℹ️ Aucune donnée de simulation fournie pour l'évaluation.");
+        return [];
+    }
+
+    
     // Formater les données
     const formattedData = data.map(item => {
         const lane_id = item.lane_id; // identifiant de la route

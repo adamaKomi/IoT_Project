@@ -1,7 +1,7 @@
 const { MongoClient } = require("mongodb");
 
 const URI = "mongodb://127.0.0.1:27017";
-const DB_NAME = "traffic_simulation";
+const DB_NAME = "sumo_traffic";
 
 let db;
 

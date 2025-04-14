@@ -5,6 +5,12 @@ const saveCongestionData = async (data) => {
         const db = get_congestionDB();
         const collection = db.collection('congestion_data');
 
+        // Vérifier si les données sont vides
+        if (!data || data.length === 0) {
+            console.log("ℹ️ Aucune donnée de congestion à enregistrer.");
+            return { upsertedCount: 0, modifiedCount: 0 };
+        }
+
         // Pour chaque élément, faire un upsert
         const operations = data.map(item => ({
             updateOne: {

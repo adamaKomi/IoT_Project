@@ -6,7 +6,7 @@
 *yarn-debug.log*
 *yarn-error.log*
 *package-lock.json
-*.env
+#*.env
 
 # Logs
 *logs
@@ -46,16 +46,11 @@
 *.pyc
 *__pycache__/
 *instance/
-*.env
+#*.env
 *.env.*
 *.sqlite3
 *.db
 
-# Flask virtual environments
-*venv/
-*env/
-*ENV/
-*.venv/
 
 **/__pycache__/
 

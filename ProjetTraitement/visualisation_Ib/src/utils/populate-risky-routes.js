@@ -1,6 +1,6 @@
 // src/populate-risky-routes.js
 const { MongoClient } = require('mongodb');
-const mongoURI = 'mongodb://localhost:27017';
+const mongoURI = 'mongodb://127.0.0.1:27017';
 const dbName = 'accidentsDB';
 const normalizeRiskIndex = (riskIndex, minRisk, maxRisk) => {
   return ((riskIndex - minRisk) / (maxRisk - minRisk)) * 100;

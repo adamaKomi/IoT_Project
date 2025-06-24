@@ -1,6 +1,6 @@
 from datetime import datetime
 from ..extensions import mongo
-from bson import ObjectId
+# from bson import ObjectId
 
 class TrafficData:
     @staticmethod

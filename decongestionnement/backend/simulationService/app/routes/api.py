@@ -50,7 +50,6 @@ def resume_simulation():
     result = current_app.simulation_service.resume_simulation()
     return jsonify(result), 200 if result["status"] != "error" else 400
 
-# Mettez à jour aussi la méthode get_simulation_status
 @api_bp.route('/simulation-status', methods=['GET'])
 @handle_errors
 def simulation_status():
@@ -65,50 +64,52 @@ def simulation_status():
             "current_step": status.get("current_step", 0)
         }
     }), 200
+    
+    
 
-@api_bp.route('/prepare-simulation', methods=['POST'])
-@handle_errors
-def prepare_simulation():
-    """Prepare SUMO files for simulation"""
-    sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
-    files = sumo_utils.prepare_simulation_files()
-    return jsonify({"status": "success", "files": files}), 200
+# @api_bp.route('/prepare-simulation', methods=['POST'])
+# @handle_errors
+# def prepare_simulation():
+#     """Prepare SUMO files for simulation"""
+#     sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
+#     files = sumo_utils.prepare_simulation_files()
+#     return jsonify({"status": "success", "files": files}), 200
 
-@api_bp.route('/traffic-data', methods=['GET'])
-@handle_errors
-def get_traffic_data():
-    """Get recent traffic data"""
-    hours = request.args.get('hours', 1, type=int)
-    traffic_service = TrafficDataService()
-    data = traffic_service.get_recent_traffic_data(hours=hours)
-    return jsonify({"status": "success", "count": len(data), "data": data}), 200
+# @api_bp.route('/traffic-data', methods=['GET'])
+# @handle_errors
+# def get_traffic_data():
+#     """Get recent traffic data"""
+#     hours = request.args.get('hours', 1, type=int)
+#     traffic_service = TrafficDataService()
+#     data = traffic_service.get_recent_traffic_data(hours=hours)
+#     return jsonify({"status": "success", "count": len(data), "data": data}), 200
 
-@api_bp.route('/congestion-stats', methods=['GET'])
-@handle_errors
-def get_congestion_stats():
-    """Get congestion statistics"""
-    traffic_service = TrafficDataService()
-    stats = traffic_service.get_congestion_stats()
-    return jsonify({"status": "success", "data": stats}), 200
+# @api_bp.route('/congestion-stats', methods=['GET'])
+# @handle_errors
+# def get_congestion_stats():
+#     """Get congestion statistics"""
+#     traffic_service = TrafficDataService()
+#     stats = traffic_service.get_congestion_stats()
+#     return jsonify({"status": "success", "data": stats}), 200
 
-@api_bp.route('/lane-data/<lane_id>', methods=['GET'])
-@handle_errors
-def get_lane_data(lane_id):
-    """Get historical data for a specific lane"""
-    limit = request.args.get('limit', 100, type=int)
-    traffic_service = TrafficDataService()
-    data = traffic_service.get_lane_history(lane_id, limit=limit)
-    return jsonify({"status": "success", "count": len(data), "data": data}), 200
+# @api_bp.route('/lane-data/<lane_id>', methods=['GET'])
+# @handle_errors
+# def get_lane_data(lane_id):
+#     """Get historical data for a specific lane"""
+#     limit = request.args.get('limit', 100, type=int)
+#     traffic_service = TrafficDataService()
+#     data = traffic_service.get_lane_history(lane_id, limit=limit)
+#     return jsonify({"status": "success", "count": len(data), "data": data}), 200
 
-@api_bp.route('/network-metadata', methods=['GET'])
-@handle_errors
-def get_network_metadata():
-    """Get network metadata"""
-    sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
-    metadata = sumo_utils.extract_network_metadata()
-    return jsonify({"status": "success", "data": metadata}), 200
+# @api_bp.route('/network-metadata', methods=['GET'])
+# @handle_errors
+# def get_network_metadata():
+#     """Get network metadata"""
+#     sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
+#     metadata = sumo_utils.extract_network_metadata()
+#     return jsonify({"status": "success", "data": metadata}), 200
 
-@api_bp.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({"status": "healthy"}), 200
+# @api_bp.route('/health', methods=['GET'])
+# def health_check():
+#     """Health check endpoint"""
+#     return jsonify({"status": "healthy"}), 200

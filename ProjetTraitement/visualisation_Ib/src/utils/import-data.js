@@ -3,7 +3,7 @@ const axios = require('axios');
 const { MongoClient } = require('mongodb');
 const { cleanAccidentData } = require('./dataCleaner');
 
-const mongoURI = 'mongodb://localhost:27017';
+const mongoURI = 'mongodb://127.0.0.1:27017';
 const dbName = 'accidentsDB';
 const collectionName = 'accidents';
 

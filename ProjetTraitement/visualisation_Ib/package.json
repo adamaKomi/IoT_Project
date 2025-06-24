@@ -1,0 +1,25 @@
+{
+  "name": "accident-map-ny",
+  "version": "1.0.0",
+  "description": "Application to map accidents with risk zones",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "import-data": "node src/import-data.js",
+    "populate-risky-routes": "node src/populate-risky-routes.js",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm start\" \"npm run client\""
+  },
+  "dependencies": {
+    "axios": "^1.8.4",
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "fuzzball": "^2.2.2",
+    "mongodb": "^5.9.2",
+    "react-icons": "^5.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

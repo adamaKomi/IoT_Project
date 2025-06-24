@@ -1,0 +1,1205 @@
+--------------------------------------------------
+Chemin: ./eslint.config.js
+Taille: 877 octets
+Date de modification: 2025-04-14 13:21:51.338473500 +0100
+Contenu:
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+
+export default [
+  { ignores: ['dist'] },
+  {
+    files: ['**/*.{js,jsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...reactHooks.configs.recommended.rules,
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+    },
+  },
+]
+--------------------------------------------------
+Chemin: ./index.css
+Taille: 189 octets
+Date de modification: 2025-04-14 13:21:51.338473500 +0100
+Contenu:
+body {
+  background-color: darkslategrey;
+}
+
+/* Styles pour la carte */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Styles Bootstrap personnalisés si nécessaire */--------------------------------------------------
+Chemin: ./index.html
+Taille: 422 octets
+Date de modification: 2025-04-14 13:21:51.339471500 +0100
+Contenu:
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="stylesheet" href="./index.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+--------------------------------------------------
+Chemin: ./package.json
+Taille: 864 octets
+Date de modification: 2025-04-14 13:21:51.340473100 +0100
+Contenu:
+{
+  "name": "traffic-management-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.6.1",
+    "bootstrap": "^5.3.3",
+    "leaflet": "^1.9.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-leaflet": "^5.0.0",
+    "react-redux": "^9.2.0",
+    "socket": "^0.14.57",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react-swc": "^3.8.0",
+    "eslint": "^9.21.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^15.15.0",
+    "vite": "^6.2.0"
+  }
+}
+--------------------------------------------------
+Chemin: ./public/vite.svg
+Taille: 1497 octets
+Date de modification: 2025-04-14 13:21:51.341469100 +0100
+Contenu:
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>--------------------------------------------------
+Chemin: ./README.md
+Taille: 5438 octets
+Date de modification: 2025-04-14 13:21:51.337469200 +0100
+Contenu:
+```markdown
+# 🚦 Système de Gestion de la Congestion Routière - Frontend
+
+![React](https://img.shields.io/badge/React-19-blue)
+![Redux](https://img.shields.io/badge/Redux-4.x-purple)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-blueviolet)
+
+Interface utilisateur de l'application de régulation de trafic urbain en temps réel, basée sur React. Ce frontend communique avec les microservices backend via WebSockets et REST API.
+
+---
+
+## 📚 Table des matières
+- [🚀 Fonctionnalités](#-fonctionnalités)
+- [🧰 Technologies](#-technologies)
+- [📥 Installation](#-installation)
+- [⚙️ Configuration](#-configuration)
+- [📁 Structure du Projet](#-structure-du-projet)
+- [🌐 API Endpoints](#-api-endpoints)
+- [🚀 Déploiement](#-déploiement)
+- [📄 Licence](#-licence)
+
+---
+
+## 🚀 Fonctionnalités
+
+### 🗺️ Cartographie Interactive
+- Visualisation en temps réel des routes congestionnées
+- Marqueurs dynamiques avec code couleur (niveau de congestion)
+- Navigation fluide et zoom multi-niveaux
+
+### 🎮 Contrôle de Simulation
+- Commandes : Démarrer, Arrêter, Mettre en pause, Reprendre
+- Statut de la simulation en temps réel
+- Réglage des paramètres de simulation
+
+### ⚠️ Système d'Alertes
+- Notifications instantanées pour les zones critiques
+- Historique des alertes enregistrées
+- Filtrage par niveau de gravité
+
+### 🧭 Calcul d'Itinéraires
+- Recherche par coordonnées GPS
+- Suggestions d'itinéraires alternatifs
+- Estimation du temps de trajet en fonction du trafic
+
+---
+
+## 🧰 Technologies
+
+### Frontend
+- ⚛️ **React 19** + **Vite**
+- 🧠 **Redux Toolkit**
+- 🗺️ **React Leaflet** (OpenStreetMap)
+- 🔌 **Socket.io-client**
+- 🎨 **Bootstrap 5** + **CSS Modules**
+
+### Outils de Développement
+- 🔍 **ESLint** (linting)
+- 🧼 **Prettier** (formatage de code)
+- 🗃️ **Git** (versioning)
+
+---
+
+## 📥 Installation
+
+1. **Cloner le dépôt :**
+   ```bash
+   git clone https://github.com/votre-repo/decongestionnement.git
+   cd decongestionnement/frontend
+   ```
+
+2. **Installer les dépendances :**
+   ```bash
+   npm install
+   ```
+
+3. **Configurer les variables d’environnement :**
+   Créez un fichier `.env` à la racine du dossier `frontend` :
+   ```env
+   VITE_API_URL=http://localhost:4200
+   VITE_SIMULATION_URL=http://localhost:5000
+   VITE_MAP_TILE_URL=https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+   ```
+
+4. **Lancer l’application :**
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## ⚙️ Configuration
+
+- `vite.config.js` → Configuration du projet Vite
+- `eslint.config.js` → Règles de linting
+- `src/redux/store` → Configuration du store Redux
+
+### 🎨 Personnalisation
+Modifiez `src/components/Layout/MainLayout.css` pour :
+- Adapter les couleurs du thème
+- Modifier les dimensions du layout
+- Styliser les composants selon vos besoins
+
+---
+
+## 📁 Structure du Projet
+
+```
+src/
+├── components/
+│   ├── Layout/          # Composants principaux de mise en page
+│   ├── Map/             # Composants liés à la carte
+│   └── Simulation/      # UI de contrôle de simulation
+├── redux/
+│   ├── actions/         # Actions Redux
+│   ├── reducers/        # Réducteurs d’état
+│   └── store/           # Configuration centrale Redux
+├── services/            # Services pour les appels API
+├── assets/              # Fichiers statiques (images, icônes...)
+└── utils/               # Fonctions utilitaires
+```
+
+---
+
+## 🌐 API Endpoints
+
+### 🔗 Service Principal
+
+| Endpoint                    | Méthode | Description                      |
+|----------------------------|---------|----------------------------------|
+| `/api/alerts/congestion`   | GET     | Récupère les alertes en cours   |
+
+### 🧪 Service de Simulation
+
+| Endpoint                      | Méthode | Corps de requête             | Description                        |
+|------------------------------|---------|------------------------------|------------------------------------|
+| `/api/v1/start-simulation`   | POST    | `{ "duration": number }`     | Démarre la simulation              |
+| `/api/v1/stop-simulation`    | POST    | -                            | Arrête la simulation               |
+| `/api/v1/pause-simulation`   | POST    | -                            | Met en pause                       |
+| `/api/v1/resume-simulation`  | POST    | -                            | Reprend la simulation              |
+| `/api/v1/simulation-status`  | GET     | -                            | Retourne le statut actuel          |
+
+---
+
+## 🚀 Déploiement
+
+1. **Build de production :**
+   ```bash
+   npm run build
+   ```
+
+2. **Lancer un serveur local de prévisualisation :**
+   ```bash
+   npm run preview
+   ```
+
+3. **Déployer les fichiers `/dist` sur :**
+   - [Vercel](https://vercel.com/)
+   - [Netlify](https://netlify.com/)
+   - Serveur personnel (Nginx, Apache, etc.)
+
+---
+
+## 📄 Licence
+
+Ce projet est sous licence **MIT**.  
+Consultez le fichier [LICENSE](./LICENSE) pour plus d’informations.
+
+---
+
+## 👨‍💻 Auteur
+
+Développé avec ❤️ par **Groupe 1 IOT/Ilisi2** – 2025  
+[![Contact](https://img.shields.io/badge/Contact-Email-green)](mailto:votre@email.com)
+```
+
+---
+--------------------------------------------------
+Chemin: ./src/App.jsx
+Taille: 128 octets
+Date de modification: 2025-04-14 13:21:51.342467100 +0100
+Contenu:
+import MainLayout from "./components/Layout/MainLayout";
+
+function App() {
+  return <MainLayout />;
+}
+
+export default App;--------------------------------------------------
+Chemin: ./src/components/Layout/MainLayout.css
+Taille: 2114 octets
+Date de modification: 2025-04-14 13:21:51.344470800 +0100
+Contenu:
+/* Conteneur principal */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  height: fit-content; /* Prend toute la hauteur de la fenêtre */
+  padding: 1rem;
+  background-color: darkslategrey;
+}
+
+/* Titre principal */
+.main-layout-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: white;
+  font-size: 1.5rem;
+}
+
+/* Conteneur des colonnes */
+.main-layout-content {
+  display: flex;
+  flex-grow: 1; /* Permet aux colonnes de prendre tout l'espace disponible */
+  gap: 1rem; /* Espacement entre les colonnes */
+}
+
+/* Colonne de la carte */
+.main-layout-map {
+  flex: 2; /* Prend 2/3 de l'espace horizontal */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.main-layout-map .main-layout-card {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Ombre pour un effet visuel */
+}
+
+.main-layout-map .main-layout-card-body {
+  padding: 0;
+  flex-grow: 1;
+}
+
+/* Colonne des contrôles et notifications */
+.main-layout-controls {
+  flex: 1; /* Prend 1/3 de l'espace horizontal */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.main-layout-controls .main-layout-card {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Ombre pour un effet visuel */
+}
+
+.main-layout-controls .main-layout-card-header {
+  background-color: #007bff; /* Couleur de fond bleu */
+  color: white;
+  padding: 0.75rem 1rem;
+}
+
+.main-layout-controls .main-layout-card-title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* Contenu défilable */
+.main-layout-card-body-scrollable {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Active le défilement vertical */
+  padding: 1rem;
+}
+
+
+/* Simulation Dashboard */
+.simulation-dashboard .status-display {
+  background-color: #f8f9fa;
+  border-left: 4px solid #007bff;
+}
+
+.simulation-dashboard .controls-grid .btn {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.simulation-dashboard .badge {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.5rem;
+}--------------------------------------------------
+Chemin: ./src/components/Layout/MainLayout.jsx
+Taille: 2037 octets
+Date de modification: 2025-04-14 13:21:51.345472200 +0100
+Contenu:
+import React from "react";
+import TrafficMap from "../Map/TrafficMap";
+import SimulationDashboard from "../Simulation/SimulationDashboard";
+import NotificationPanel from "../Simulation/NotificationPanel";
+
+const MainLayout = () => {
+  return (
+    <div className="main-layout vh-100 d-flex flex-column p-3" style={{ backgroundColor: "darkslategrey" }}>
+      {/* En-tête avec titre et bouton d'accidents */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="main-layout-title text-white mb-0">Gestion de la congestion du trafic routier</h1>
+        <a 
+          href="http://localhost:5173/" 
+          className="btn btn-outline-warning btn-sm" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          <i className="bi bi-exclamation-triangle me-2"></i>
+          Voir les données sur les accidents
+        </a>
+      </div>
+
+      <div className="main-layout-content row flex-grow-1 g-3">
+        {/* Carte */}
+        <div className="main-layout-map col-md-8 h-100">
+          <div className="main-layout-card card h-100 shadow p-0 m-0 border-0">
+            <div className="main-layout-card-body card-body m-0" style={{ backgroundColor: "darkslategrey" }}>
+              <TrafficMap />
+            </div>
+          </div>
+        </div>
+
+        {/* Contrôles et notifications */}
+        <div className="main-layout-controls col-md-4 h-100 d-flex flex-column">
+          <div className="main-layout-card card h-100 shadow">
+            <div className="main-layout-card-header card-header bg-primary text-white">
+              <h5 className="main-layout-card-title mb-0">Tableau de bord</h5>
+            </div>
+            <div className="main-layout-card-body-scrollable card-body d-flex flex-column overflow-auto">
+              <SimulationDashboard />
+              <NotificationPanel />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MainLayout;--------------------------------------------------
+Chemin: ./src/components/Map/TrafficMap.jsx
+Taille: 3135 octets
+Date de modification: 2025-04-14 13:21:51.347470100 +0100
+Contenu:
+import React, { useEffect } from "react";
+import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { useDispatch, useSelector } from "react-redux";
+import { setTrafficData } from "../../redux/actions/trafficActions";
+import { fetchTrafficData } from "../../services/trafficService";
+import ZoomHandler from "./ZoomHandler";
+import L from "leaflet";
+
+const TrafficMap = () => {
+  const dispatch = useDispatch();
+  const trafficData = useSelector((state) => state.trafficData);
+  const zoomLevel = useSelector((state) => state.zoomLevel);
+  const center = [33.687558, -7.376867];
+  const UPDATE_INTERVAL = 15000;
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchTrafficData();
+        dispatch(setTrafficData(data));
+      } catch (error) {
+        console.error("Erreur lors du chargement des données de trafic :", error);
+      }
+    };
+
+    loadData();
+    const interval = setInterval(loadData, UPDATE_INTERVAL);
+    return () => clearInterval(interval);
+  }, [dispatch]);
+
+  return (
+    <div className="h-100">
+      <MapContainer center={center} zoom={zoomLevel} className="h-100 w-100">
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="© OpenStreetMap contributors"
+        />
+        <ZoomHandler />
+
+        {/* Affichage des lignes et des markers */}
+        {trafficData.map((line) => {
+          // Création d'une icône personnalisée pour le marker (style Google Maps)
+          const markerIcon = new L.Icon({
+            iconUrl: `data:image/svg+xml;base64,${btoa(`
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 24">
+                <path d="M12 0C7.589 0 4 3.589 4 8c0 5.25 8 16 8 16s8-10.75 8-16c0-4.411-3.589-8-8-8zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z" fill="${line.color}" />
+              </svg>
+            `)}`,
+            iconSize: [20, 30], // Taille réduite du marker
+            iconAnchor: [10, 30], // Point d'ancrage (bas du marker)
+          });
+
+          // Calcul de la position centrale de la ligne
+          const middleIndex = Math.floor(line.shape.length / 2);
+          const middlePosition = line.shape[middleIndex];
+
+          return (
+            <React.Fragment key={`${line.lane_id}-${line.congestionLevel}`}>
+              {/* Affichage de la ligne */}
+              <Polyline positions={line.shape} color={line.color} />
+
+              {/* Affichage du marker si congestionLevel >= "D" */}
+              {line.congestionLevel > "E" && (
+                <Marker position={middlePosition} icon={markerIcon}>
+                  <Popup>
+                    <strong>Congestion Niveau {line.congestionLevel}</strong>
+                    <p>Lane ID: {line.lane_id}</p>
+                  </Popup>
+                </Marker>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </MapContainer>
+    </div>
+  );
+};
+
+export default TrafficMap;--------------------------------------------------
+Chemin: ./src/components/Map/ZoomHandler.jsx
+Taille: 417 octets
+Date de modification: 2025-04-14 13:21:51.348474600 +0100
+Contenu:
+import { useMapEvents } from "react-leaflet";
+import { useDispatch } from "react-redux";
+import { setZoomLevel } from "../../redux/actions/trafficActions";
+
+const ZoomHandler = () => {
+  const dispatch = useDispatch();
+
+  useMapEvents({
+    zoomend: (e) => {
+      const newZoom = e.target.getZoom();
+      dispatch(setZoomLevel(newZoom));
+    },
+  });
+
+  return null;
+};
+
+export default ZoomHandler;--------------------------------------------------
+Chemin: ./src/components/Simulation/AlertsList.jsx
+Taille: 681 octets
+Date de modification: 2025-04-14 13:21:51.349468600 +0100
+Contenu:
+import React from 'react';
+
+const AlertsList = ({ alerts }) => {
+  const filteredAlerts = alerts.filter((alert) => alert.congestionLevel >= "D");
+
+  if (filteredAlerts.length === 0) {
+    return <p className="text-muted">Aucune alerte de congestion actuellement.</p>;
+  }
+
+  return filteredAlerts.map((alert, index) => (
+    <div key={index} className="alert alert-warning p-2 mb-1">
+      <h6 className="mb-1">Congestion Niveau {alert.congestionLevel}</h6>
+      <p className="mb-1 small">{alert.message}</p>
+      <small className="text-muted">Détecté à {new Date(alert.timestamp).toLocaleTimeString()}</small>
+    </div>
+  ));
+};
+
+export default AlertsList;--------------------------------------------------
+Chemin: ./src/components/Simulation/NotificationPanel.jsx
+Taille: 4902 octets
+Date de modification: 2025-04-14 13:21:51.350469600 +0100
+Contenu:
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import Tabs from './Tabs';
+import AlertsList from './AlertsList';
+import RouteDetails from './RouteDetails';
+import { parseCoordinates } from '../../utils/utils/parseCoordinates';
+
+const NotificationPanel = () => {
+  const [originalRoute, setOriginalRoute] = useState(null);
+  const [alternativeRoute, setAlternativeRoute] = useState(null);
+  const [startPoint, setStartPoint] = useState("33.689, -7.384");
+  const [destination, setDestination] = useState("33.692, -7.381");
+  const [activeTab, setActiveTab] = useState('simulation'); // Onglet actif
+  const alerts = useSelector((state) => state.trafficData);
+
+  const handleRouteSubmit = async (e) => {
+    e.preventDefault();
+    const startCoords = parseCoordinates(startPoint);
+    const destCoords = parseCoordinates(destination);
+
+    if (!startCoords || !destCoords) {
+      alert('Format de coordonnées invalide. Utilisez le format: latitude, longitude');
+      return;
+    }
+
+    try {
+      const originalRes = await fetch('/api/routing/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start: startCoords, end: destCoords }),
+      });
+      const originalData = await originalRes.json();
+      setOriginalRoute(originalData);
+
+      const altRes = await fetch('/api/routing/alternatives', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start: startCoords, end: destCoords }),
+      });
+      const alternativeData = await altRes.json();
+      setAlternativeRoute(alternativeData);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des itinéraires:', error);
+    }
+  };
+
+  const tabs = [
+    { id: 'simulation', label: 'Simulation' },
+    { id: 'notifications', label: 'Notifications' },
+    { id: 'routes', label: 'Itinéraires' },
+  ];
+
+  return (
+    <div className="notification-panel d-flex flex-column h-100">
+      {/* Palette d'onglets */}
+      <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Contenu des onglets */}
+      <div className="tab-content flex-grow-1 overflow-auto">
+        {activeTab === 'simulation' && (
+          <form onSubmit={handleRouteSubmit} className="mb-3">
+            <div className="mb-2">
+              <label htmlFor="startPoint" className="form-label">Point de départ</label>
+              <input
+                type="text"
+                id="startPoint"
+                value={startPoint}
+                onChange={(e) => setStartPoint(e.target.value)}
+                className="form-control"
+                placeholder="Coordonnées de départ (ex: 33.689, -7.384)"
+                required
+              />
+            </div>
+            <div className="mb-2">
+              <label htmlFor="destination" className="form-label">Destination</label>
+              <input
+                type="text"
+                id="destination"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                className="form-control"
+                placeholder="Coordonnées de destination (ex: 33.692, -7.381)"
+                required
+              />
+            </div>
+            <button type="submit" className="btn btn-primary w-100">Trouver un itinéraire</button>
+          </form>
+        )}
+
+        {activeTab === 'notifications' && (
+          <div>
+            <h5 className="text-center">Alertes de Congestion</h5>
+            <div className="overflow-auto mb-3" style={{ maxHeight: '300px' }}>
+              <AlertsList alerts={alerts} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'routes' && (
+          <div>
+            <div className="btn-group mb-3" role="group">
+              <button
+                type="button"
+                className={`btn btn-outline-primary ${activeTab === 'originalRoute' ? 'active' : ''}`}
+                onClick={() => setActiveTab('originalRoute')}
+              >
+                Itinéraire initial
+              </button>
+              <button
+                type="button"
+                className={`btn btn-outline-primary ${activeTab === 'alternativeRoute' ? 'active' : ''}`}
+                onClick={() => setActiveTab('alternativeRoute')}
+              >
+                Itinéraire alternatif
+              </button>
+            </div>
+            {activeTab === 'originalRoute' && <RouteDetails routeData={originalRoute} isOriginal={true} />}
+            {activeTab === 'alternativeRoute' && <RouteDetails routeData={alternativeRoute} isOriginal={false} />}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default NotificationPanel;--------------------------------------------------
+Chemin: ./src/components/Simulation/RouteDetails.jsx
+Taille: 1090 octets
+Date de modification: 2025-04-14 13:21:51.351468100 +0100
+Contenu:
+import React from 'react';
+
+const RouteDetails = ({ routeData, isOriginal }) => {
+  if (!routeData || !routeData.route) {
+    return <p className="text-muted">Itinéraire non disponible.</p>;
+  }
+
+  return (
+    <div>
+      {routeData.route.segments.map((segment, index) => (
+        <div key={index} className="mb-3">
+          <strong>
+            Segment {index + 1}: {segment.name || `Section ${segment.lane_id}`}
+          </strong>
+          <p>{segment.instruction || 'Suivez cette route'}</p>
+          {segment.congestionLevel !== 'green' && (
+            <p className="text-danger">Trafic ralenti : {segment.congestionMessage || 'Congestion détectée'}</p>
+          )}
+        </div>
+      ))}
+      <div className="mt-3">
+        <p><strong>Distance :</strong> {routeData.route.distance.toFixed(1)} km</p>
+        <p><strong>Durée :</strong> {Math.round(routeData.route.duration)} min</p>
+        <p><strong>Niveau de trafic :</strong> {routeData.route.congestionLevel || 'Normal'}</p>
+      </div>
+    </div>
+  );
+};
+
+export default RouteDetails;--------------------------------------------------
+Chemin: ./src/components/Simulation/SimulationDashboard.jsx
+Taille: 5471 octets
+Date de modification: 2025-04-14 13:21:51.352471600 +0100
+Contenu:
+// src/components/Simulation/SimulationDashboard.jsx
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setSimulationStatus } from "../../redux/actions/trafficActions";
+import { startSimulation, stopSimulation, pauseSimulation, resumeSimulation, getSimulationStatus } from "../../services/trafficService";
+
+const SimulationDashboard = () => {
+  const dispatch = useDispatch();
+  const [status, setStatus] = useState({
+    running: false,
+    paused: false,
+    traci_connected: false,
+    current_step: 0
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const interval = setInterval(fetchStatus, 2000);
+    fetchStatus(); // Appel initial
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchStatus = async () => {
+    try {
+      const response = await getSimulationStatus();
+      setStatus(response.data);
+    } catch (error) {
+      console.error("Error fetching simulation status:", error);
+    }
+  };
+
+  const handleStart = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await startSimulation({ duration: 1000 });
+      if (result.status === "success") {
+        dispatch(setSimulationStatus(true));
+        await fetchStatus();
+      } else {
+        throw new Error(result.message || "Échec du démarrage de la simulation");
+      }
+    } catch (error) {
+      setError(error.message);
+      console.error("Error starting simulation:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStop = async () => {
+    setError(null);
+    try {
+      const result = await stopSimulation();
+      if (result.status === "success") {
+        dispatch(setSimulationStatus(false));
+        await fetchStatus();
+      } else {
+        throw new Error(result.message || "Échec de l'arrêt de la simulation");
+      }
+    } catch (error) {
+      setError(error.message);
+      console.error("Error stopping simulation:", error);
+    }
+  };
+
+  const handlePause = async () => {
+    setError(null);
+    try {
+      const result = await pauseSimulation();
+      if (result.status !== "success") {
+        throw new Error(result.message || "Échec de la mise en pause");
+      }
+      await fetchStatus();
+    } catch (error) {
+      setError(error.message);
+      console.error("Error pausing simulation:", error);
+    }
+  };
+
+  const handleResume = async () => {
+    setError(null);
+    try {
+      const result = await resumeSimulation();
+      if (result.status !== "success") {
+        throw new Error(result.message || "Échec de la reprise");
+      }
+      await fetchStatus();
+    } catch (error) {
+      setError(error.message);
+      console.error("Error resuming simulation:", error);
+    }
+  };
+
+  return (
+    <div className="simulation-dashboard mb-4">
+      <div className="status-display mb-3 p-3 bg-light rounded">
+        <h5>Statut de la simulation</h5>
+        <div className="d-flex justify-content-between">
+          <span>État: </span>
+          <span className={`badge ${status.running ? (status.paused ? 'bg-warning' : 'bg-success') : 'bg-danger'}`}>
+            {status.running ? (status.paused ? 'En pause' : 'En cours') : 'Arrêtée'}
+          </span>
+        </div>
+        <div className="d-flex justify-content-between">
+          <span>Connecté à SUMO:</span>
+          <span className={`badge ${status.traci_connected ? 'bg-success' : 'bg-danger'}`}>
+            {status.traci_connected ? 'Oui' : 'Non'}
+          </span>
+        </div>
+        <div className="d-flex justify-content-between">
+          <span>Étape actuelle:</span>
+          <span>{status.current_step}</span>
+        </div>
+      </div>
+
+      {error && (
+        <div className="alert alert-danger mb-3">
+          {error}
+        </div>
+      )}
+
+      <div className="controls-grid mb-3">
+        <div className="row g-2">
+          <div className="col-6">
+            <button
+              className="btn btn-success w-100"
+              onClick={handleStart}
+              disabled={status.running || isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Démarrage...
+                </>
+              ) : 'Démarrer'}
+            </button>
+          </div>
+          <div className="col-6">
+            <button
+              className="btn btn-danger w-100"
+              onClick={handleStop}
+              disabled={!status.running}
+            >
+              Arrêter
+            </button>
+          </div>
+          <div className="col-6">
+            <button
+              className="btn btn-warning w-100"
+              onClick={handlePause}
+              disabled={!status.running || status.paused}
+            >
+              Pause
+            </button>
+          </div>
+          <div className="col-6">
+            <button
+              className="btn btn-info w-100"
+              onClick={handleResume}
+              disabled={!status.paused}
+            >
+              Reprendre
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SimulationDashboard;--------------------------------------------------
+Chemin: ./src/components/Simulation/Tabs.jsx
+Taille: 484 octets
+Date de modification: 2025-04-14 13:21:51.352471600 +0100
+Contenu:
+import React from 'react';
+
+const Tabs = ({ tabs, activeTab, onTabChange }) => {
+  return (
+    <ul className="nav nav-tabs mb-3">
+      {tabs.map((tab) => (
+        <li key={tab.id} className="nav-item">
+          <button
+            className={`nav-link ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => onTabChange(tab.id)}
+          >
+            {tab.label}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+export default Tabs;--------------------------------------------------
+Chemin: ./src/main.jsx
+Taille: 407 octets
+Date de modification: 2025-04-14 13:21:51.353469700 +0100
+Contenu:
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
+import App from "./App.jsx";
+import store from "./redux/store/configureStore";
+import "bootstrap/dist/css/bootstrap.min.css";
+
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </StrictMode>
+);--------------------------------------------------
+Chemin: ./src/redux/actions/trafficActions.jsx
+Taille: 450 octets
+Date de modification: 2025-04-14 13:21:51.355470600 +0100
+Contenu:
+export const setTrafficData = (data) => ({
+    type: "SET_TRAFFIC_DATA",
+    payload: data,
+  });
+  
+  export const setZoomLevel = (zoom) => ({
+    type: "SET_ZOOM_LEVEL",
+    payload: zoom,
+  });
+  
+  export const setSimulationStatus = (status) => ({
+    type: "SET_SIMULATION_STATUS",
+    payload: status,
+  });
+
+  export const setNotifications = (notification) => ({
+    type: "SET_NOTIFICATION",
+    payload: notification,
+  });--------------------------------------------------
+Chemin: ./src/redux/reducers/trafficReducer.jsx
+Taille: 709 octets
+Date de modification: 2025-04-14 13:21:51.356468700 +0100
+Contenu:
+const initialState = {
+    trafficData: [],
+    zoomLevel: 16,
+    isSimulationRunning: false,
+    notifications: []
+  };
+  
+  const trafficReducer = (state = initialState, action) => {
+    switch (action.type) {
+      case "SET_TRAFFIC_DATA":
+        return { ...state, trafficData: action.payload };
+      case "SET_ZOOM_LEVEL":
+        return { ...state, zoomLevel: action.payload };
+      case "SET_SIMULATION_STATUS":
+        return { ...state, isSimulationRunning: action.payload };
+      case "SET_NOTIFICATION":
+        return {...state, notifications: [...state.notifications, action.payload]};
+      default:
+        return state;
+    }
+  };
+  
+  export default trafficReducer;--------------------------------------------------
+Chemin: ./src/redux/store/configureStore.jsx
+Taille: 163 octets
+Date de modification: 2025-04-14 13:21:51.357476900 +0100
+Contenu:
+import { createStore } from "redux";
+import trafficReducer from "../reducers/trafficReducer";
+
+const store = createStore(trafficReducer);
+export default store;--------------------------------------------------
+Chemin: ./src/services/trafficService.jsx
+Taille: 4529 octets
+Date de modification: 2025-04-14 13:21:51.358478500 +0100
+Contenu:
+import { io } from "socket.io-client";
+const API_BASE_URL = "http://127.0.0.1:4200";
+const SIMULATION_URL = "http://127.0.0.1:3600";
+
+
+let socket = null;
+let pollingInterval = null;
+
+export const fetchTrafficData = async () => {
+  try {
+    // Récupération initiale des alertes via l'API
+    const initialData = await fetchAlerts();
+
+    // Connexion au serveur WebSocket
+    socket = io(API_BASE_URL);
+
+    // Gestionnaire de connexion réussie
+    socket.on("connect", () => {
+      console.log("Connecté au serveur WebSocket");
+    });
+
+    // Écoute des mises à jour de congestion en temps réel
+    socket.on("congestion_update", async () => {
+      console.log("Mise à jour des alertes de congestion reçue");
+      const updatedData = await fetchAlerts();
+      return updatedData; // Retourne les nouvelles données
+    });
+
+    // Polling toutes les 30 secondes
+    pollingInterval = setInterval(async () => {
+      const polledData = await fetchAlerts();
+      return polledData; // Retourne les données récupérées par polling
+    }, 30000);
+
+    return initialData; // Retourne les données initiales
+  } catch (error) {
+    console.error("Erreur lors de l'initialisation de fetchTrafficData:", error);
+    return [];
+  }
+};
+
+// Fonction pour récupérer les alertes de congestion depuis l'API
+const fetchAlerts = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/alerts/congestion`);
+    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("La réponse n'est pas au format JSON");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur lors de la récupération des alertes:", error);
+    return [];
+  }
+};
+
+// Fonction de nettoyage pour arrêter WebSocket et polling
+export const cleanupTrafficData = () => {
+  if (socket) {
+    socket.disconnect(); // Ferme la connexion WebSocket
+    socket = null;
+  }
+  if (pollingInterval) {
+    clearInterval(pollingInterval); // Arrête le polling
+    pollingInterval = null;
+  }
+};
+
+export const startSimulation = async (options = {}) => {
+  try {
+    const response = await fetch(`${SIMULATION_URL}/api/v1/start-simulation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        duration: options.duration || 1000 // Valeur par défaut de 1000 si non spécifié
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Erreur HTTP: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur lors du démarrage de la simulation:", error);
+    throw error;
+  }
+};
+
+export const stopSimulation = async () => {
+  try {
+    const response = await fetch(`${SIMULATION_URL}/api/v1/stop-simulation`, {
+      method: 'POST'
+    });
+    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur lors de l'arrêt de la simulation:", error);
+    throw error;
+  }
+};
+
+export const pauseSimulation = async () => {
+  try {
+    const response = await fetch(`${SIMULATION_URL}/api/v1/pause-simulation`, {
+      method: 'POST'
+    });
+    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur lors de la pause de la simulation:", error);
+    throw error;
+  }
+};
+
+export const resumeSimulation = async () => {
+  try {
+    const response = await fetch(`${SIMULATION_URL}/api/v1/resume-simulation`, {
+      method: 'POST'
+    });
+    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur lors de la reprise de la simulation:", error);
+    throw error;
+  }
+};
+
+export const getSimulationStatus = async () => {
+  try {
+    const response = await fetch(`${SIMULATION_URL}/api/v1/simulation-status`);
+    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur lors de la récupération du statut:", error);
+    throw error;
+  }
+};--------------------------------------------------
+Chemin: ./src/utils/utils/parseCoordinates.jsx
+Taille: 262 octets
+Date de modification: 2025-04-14 13:21:51.360478600 +0100
+Contenu:
+export const parseCoordinates = (coordStr) => {
+  const parts = coordStr.split(',').map((part) => parseFloat(part.trim()));
+  if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) {
+    return null;
+  }
+  return { lat: parts[0], lng: parts[1] };
+};--------------------------------------------------
+Chemin: ./vite.config.js
+Taille: 230 octets
+Date de modification: 2025-04-14 13:21:51.361484200 +0100
+Contenu:
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  server:{
+    port: 3500,
+    strictPort: true,
+  },
+})

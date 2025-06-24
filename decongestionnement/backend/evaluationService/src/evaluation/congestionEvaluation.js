@@ -93,7 +93,7 @@ const getMeanSpeed = (vehicules, max_speed) => {
 
 
 const getTravelTime = (lane_length, mean_speed, max_speed) => {
-    travel_time = lane_length / (mean_speed > 0 ? mean_speed : max_speed);
+    const travel_time = lane_length / (mean_speed > 0 ? mean_speed : max_speed);
     return travel_time * 60;
 }
 

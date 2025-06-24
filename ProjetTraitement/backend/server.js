@@ -33,9 +33,9 @@ cron.schedule('*/5 * * * *', async () => {
   console.log("Mise à jour automatique des accidents...");
   try {
     // Envoyer une requête POST pour mettre à jour les données d'accidents
-    const response = await axios.post('http://localhost:3000/accidents/update');
+    const response = await axios.post('http://localhost:3010/accidents/update');
     // Envoyer une requête POST pour mettre à jour les statistiques des accidents par période
-    const response1 = await axios.post('http://localhost:3000/accidents/crash-per-period/update');
+    const response1 = await axios.post('http://localhost:3010/accidents/crash-per-period/update');
     console.log("Mise à jour terminée des accidents:", response.data.message); // Message de succès
     console.log("Mise à jour terminée des statistiques:", response1.data.message); // Message de succès
   } catch (error) {
@@ -44,7 +44,7 @@ cron.schedule('*/5 * * * *', async () => {
 });
 
 // Lancer le serveur sur le port spécifié dans les variables d'environnement ou sur le port 3000 par défaut
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3010;
 app.listen(PORT, () => {
   console.log(`Serveur lancé sur http://localhost:${PORT}`); // Message indiquant que le serveur est en cours d'exécution
 });

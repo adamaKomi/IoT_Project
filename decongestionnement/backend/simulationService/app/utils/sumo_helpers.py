@@ -14,7 +14,7 @@ def configure_simulation(sumo_config_path: str) -> List[str]:
         "--delay", "0",
         "--start",
         "--scale", "5",
-        "--quit-on-end",  # Ajout de cette option pour fermer proprement
+        "--quit-on-end",  # pour fermer proprement
         "--no-internal-links",  # Ignore les liens internes
     ]
 

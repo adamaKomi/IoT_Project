@@ -1,6 +1,7 @@
 const express = require('express');
 const { MongoClient } = require('mongodb');
-const axios = require('axios'); // Ajout de l'importation d'axios
+const axios = require('axios');
+const cors = require('cors'); // ✅ Ajouté ici
 const accidentRoutes = require('./routes/accidentRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const zoneRoutes = require('./routes/zoneRoutes');
@@ -9,30 +10,13 @@ const { fetchAllAccidentData, saveToMongoDB, preprocessData } = require('./utils
 const app = express();
 const port = 3003;
 
-// Définir l'URL de l'API des accidents
-const apiURL = 'https://data.cityofnewyork.us/resource/h9gi-nx95.json';
-
-// Middleware pour gérer CORS manuellement
-app.use((req, res, next) => {
-  // Autoriser les requêtes provenant de localhost:3000 (votre frontend)
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3003');
-  
-  // Autoriser les méthodes HTTP spécifiques
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  
-  // Autoriser certains en-têtes dans les requêtes
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Autoriser les cookies (si nécessaire)
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  // Gérer les requêtes OPTIONS (preflight)
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200); // Répondre immédiatement avec un statut 200 pour les requêtes OPTIONS
-  }
-  
-  next(); // Passer au middleware suivant
-});
+// ✅ Middleware CORS propre
+app.use(cors({
+  origin: 'http://localhost:5173', // autorise les requêtes depuis Vite
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // Middleware pour parser le JSON
 app.use(express.json());
@@ -42,13 +26,15 @@ app.use('/', accidentRoutes);
 app.use('/', statsRoutes);
 app.use('/', zoneRoutes);
 
-// Fonction pour rafraîchir les données
+// Définir l'URL de l'API des accidents
+const apiURL = 'https://data.cityofnewyork.us/resource/h9gi-nx95.json';
+
+// Fonction pour rafraîchir les données récentes
 async function fetchRecentAccidentData() {
   let allData = [];
   let offset = 0;
   const limit = 10000;
   const batchSize = 50000;
-  // Calculer la date d'il y a 7 jours
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   while (offset < batchSize) {
@@ -70,7 +56,6 @@ async function fetchRecentAccidentData() {
 
       allData = [...allData, ...response.data];
       console.log(`${response.data.length} accidents récupérés.`);
-
       offset += limit;
 
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -88,19 +73,15 @@ async function refreshData() {
   let client;
   try {
     console.log('Rafraîchissement des données...');
-    const newData = await fetchRecentAccidentData(); // Utiliser fetchRecentAccidentData
+    const newData = await fetchRecentAccidentData();
     const processedData = preprocessData(newData);
-    
-    client = new MongoClient('mongodb://localhost:27017');
+
+    client = new MongoClient('mongodb://127.0.0.1:27017');
     await client.connect();
     const db = client.db('accidentsDB');
     const collection = db.collection('accidents');
 
-    const latestDateInDB = await collection
-      .find()
-      .sort({ crash_date_obj: -1 })
-      .limit(1)
-      .toArray();
+    const latestDateInDB = await collection.find().sort({ crash_date_obj: -1 }).limit(1).toArray();
 
     const newRecords = processedData.filter(newItem => {
       if (!latestDateInDB[0] || !latestDateInDB[0].crash_date_obj) return true;
@@ -120,10 +101,8 @@ async function refreshData() {
   }
 }
 
-// Planifier le rafraîchissement toutes les 5 minutes (300000 ms)
+// Exécuter la mise à jour toutes les 5 minutes
 setInterval(refreshData, 300000);
-
-
 
 // Démarrer le serveur
 app.listen(port, () => {

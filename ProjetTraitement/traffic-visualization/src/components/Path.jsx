@@ -288,7 +288,8 @@ const Path=()=> {
 
       setAlternativeRoute(secondSafestRoute.coordinates);
       setAlternativeMessage(
-        `Itinéraire principal : ${selectedRoute.riskScore.toFixed(2)} score de risque, ${selectedRoute.highRiskCount} zone(s) très risquée(s).\nItinéraire alternatif : ${secondSafestRoute.riskScore.toFixed(2)} score de risque, ${secondSafestRoute.highRiskCount} zone(s) très risquée(s).`
+        `Itinéraire principal : ${secondSafestRoute.riskScore.toFixed(2)} score de risque, ${secondSafestRoute.highRiskCount} zone(s) très risquée(s).
+        \nItinéraire alternatif : ${selectedRoute.riskScore.toFixed(2)} score de risque, ${selectedRoute.highRiskCount} zone(s) très risquée(s).`
       );
       console.log('Setting showAlternativePrompt to true');
       setShowAlternativePrompt(true);
@@ -301,31 +302,26 @@ const Path=()=> {
     setCheckingRisks(false);
   };
 
-  const handleAlternativeRoute = async () => {
-    if (alternativeRoute) {
-      const selectedAlternative = evaluatedRoutes.find(route =>
-        JSON.stringify(route.coordinates) === JSON.stringify(alternativeRoute)
-      );
-
-      if (selectedAlternative) {
-        setRiskAlerts(() => selectedAlternative.alerts);
-        setRoute(selectedAlternative.coordinates);
-        setAlternativeRoute(null);
-        setAlternativeMessage("Itinéraire alternatif adopté comme nouvel itinéraire principal.");
-        setShowAlternativePrompt(false);
-        setShowMainRoute(true);
-      } else {
-        const { alerts } = await evaluateRouteRisk(alternativeRoute);
-        setRiskAlerts(() => alerts);
-        setRoute(alternativeRoute);
-        setAlternativeRoute(null);
-        setAlternativeMessage("Itinéraire alternatif adopté comme nouvel itinéraire principal.");
-        setShowAlternativePrompt(false);
-        setShowMainRoute(true);
-      }
+  // Fonction pour adopter l'itinéraire alternatif comme principal
+  const handleAlternativeRoute = () => {
+    // Vérification si au moins deux itinéraires existent
+    if (evaluatedRoutes.length > 1) {
+      // Mise à jour de l'index sélectionné
+      setSelectedRouteIndex(1);
+      // Affichage de l'itinéraire alternatif en bleu
+      setRoute(evaluatedRoutes[1].coordinates);
+      // Mise à jour des alertes avec celles de l'itinéraire alternatif
+      setRiskAlerts(evaluatedRoutes[1].alerts);
+      // Activation de l'affichage de l'itinéraire principal
+      setShowMainRoute(true);
+      // Masquage de l'ancien itinéraire principal
+      setAlternativeRoute(null);
+      // Message confirmant l'adoption de l'itinéraire alternatif
+      setAlternativeMessage("Itinéraire alternatif adopté comme nouveau principal.");
+      // Masquage de l'invite
+      setShowAlternativePrompt(false);
     }
   };
-
   const handleDeleteAlert = (indexToDelete) => {
     setRiskAlerts(prevAlerts => prevAlerts.filter((_, index) => index !== indexToDelete));
     if (riskAlerts.length === 1) {
@@ -356,6 +352,7 @@ const Path=()=> {
       setRoute(evaluatedRoutes[1].coordinates);
       setRiskAlerts(evaluatedRoutes[1].alerts);
       setShowMainRoute(true);
+      setAlternativeRoute(null);
     }
   };
 
@@ -470,7 +467,7 @@ const Path=()=> {
 
       {showAlternativePrompt && (
         <div style={styles.promptContainer}>
-          <p> remplir Des zones à risque ont été détectées. Voulez-vous un itinéraire plus sûr ?</p>
+          <p>  Des zones à risque ont été détectées. Voulez-vous un itinéraire plus sûr ?</p>
           {alternativeMessage && <p style={{ color: '#ff4444' }}>{alternativeMessage}</p>}
           <button onClick={handleAlternativeRoute} style={styles.promptButton}>
             Oui, adopter l'itinéraire alternatif

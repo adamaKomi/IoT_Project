@@ -1,0 +1,399 @@
+--------------------------------------------------
+Chemin: ./package.json
+Taille: 559 octets
+Date de modification: 2025-04-14 13:21:51.200425500 +0100
+Contenu:
+{
+  "name": "congestionevaluation",
+  "version": "1.0.0",
+  "description": "api pour evaluer les paramètres de la congestion du trafic routier",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "author": "Adama KOMI",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.12.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
+--------------------------------------------------
+Chemin: ./server.js
+Taille: 524 octets
+Date de modification: 2025-04-14 13:21:51.200425500 +0100
+Contenu:
+require("dotenv").config();
+const app = require("./src/app")
+const cors = require("cors");
+const {connect_congestionDB} = require("./src/config/db/congestionDB");
+const {connect_sumoTrafficDB} = require("./src/config/db/sumoTraficDB")
+
+const PORT = 5001;
+app.use(cors());
+
+async function startServer(){
+    await connect_sumoTrafficDB();
+    await connect_congestionDB();
+
+    app.listen(PORT, ()=>{
+        console.log(`Server en cours d'execution sur http://127.0.0.1:${PORT}`)
+    })
+}
+
+
+startServer();--------------------------------------------------
+Chemin: ./src/app.js
+Taille: 394 octets
+Date de modification: 2025-04-14 13:21:51.202443600 +0100
+Contenu:
+const express = require("express");
+const cors = require("cors");
+
+const simulationRoute = require("./routes/sumoTrafficRoutes")
+
+const app = express();
+
+// Middlewares
+app.use(cors());  // Activation de CORS pour toutes les requêtes
+app.use(express.json());  // Permet d'analyser le JSON dans les requêtes
+
+
+// Routes
+app.use("/api", simulationRoute);
+
+
+module.exports = app;--------------------------------------------------
+Chemin: ./src/config/db/congestionDB.js
+Taille: 778 octets
+Date de modification: 2025-04-14 13:21:51.203433200 +0100
+Contenu:
+const {MongoClient} = require("mongodb");
+
+const URI = "mongodb://127.0.0.1:27017";
+// const URI = "mongodb://mongodb:27017";
+const DB_NAME = "congestion_db"
+
+
+let db;
+
+async function connect_congestionDB(){
+    try {
+            const client = await MongoClient.connect(URI, { useNewUrlParser: true, useUnifiedTopology: true });
+            db = client.db(DB_NAME);
+            console.log("✅ Connecté à MongoDB");
+        } catch (err) {
+            console.error("❌ Erreur de connexion à la base de données 'congestion_db' :", err);
+        }
+}
+
+
+const get_congestionDB = () =>{
+    if (!db) throw new Error("❌ Base de données 'congestion_db' non connectée !");
+    return db;
+}
+
+module.exports = {connect_congestionDB, get_congestionDB};--------------------------------------------------
+Chemin: ./src/config/db/saveCongestionData.js
+Taille: 1278 octets
+Date de modification: 2025-04-14 13:21:51.204446000 +0100
+Contenu:
+const {get_congestionDB} = require("./congestionDB")
+// Fonction pour sauvegarder dans MongoDB
+const saveCongestionData = async (data) => {
+    try {
+        const db = get_congestionDB();
+        const collection = db.collection('congestion_data');
+
+        // Vérifier si les données sont vides
+        if (!data || data.length === 0) {
+            console.log("ℹ️ Aucune donnée de congestion à enregistrer.");
+            return { upsertedCount: 0, modifiedCount: 0 };
+        }
+
+        // Pour chaque élément, faire un upsert
+        const operations = data.map(item => ({
+            updateOne: {
+                filter: { lane_id: item.lane_id }, // Critère de recherche
+                update: { $set: item },           // Mise à jour des données
+                upsert: true                      // Insérer si non trouvé
+            }
+        }));
+
+        const result = await collection.bulkWrite(operations);
+        console.log(`✅ Données enregistrées : ${result.upsertedCount} insérées, ${result.modifiedCount} mises à jour`);
+    } catch (error) {
+        console.error('❌ Erreur lors de l’enregistrement dans la base de données \'congestion_db\' :', error);
+    }
+};
+
+module.exports = {saveCongestionData};--------------------------------------------------
+Chemin: ./src/config/db/sumoTraficDB.js
+Taille: 1008 octets
+Date de modification: 2025-04-14 13:21:51.205440700 +0100
+Contenu:
+const { MongoClient } = require("mongodb");
+
+const URI = "mongodb://127.0.0.1:27017";
+const DB_NAME = "sumo_traffic";
+
+let db;
+
+async function connect_sumoTrafficDB() {
+    try {
+        const client = await MongoClient.connect(URI, { useNewUrlParser: true, useUnifiedTopology: true });
+        db = client.db(DB_NAME);
+        console.log("✅ Connecté à la base de données 'sumo_traffic'");
+    } catch (error) {
+        console.error("❌ Erreur de connexion à la base de données 'sumo_traffic' :", error);
+    }
+}
+
+const get_sumoTrafficDB = () => {
+    if (!db) throw new Error("❌ Base de données 'sumo_traffic non connectée !");
+    return db;
+};
+
+// Ajout d'une fonction pour fermer proprement la connexion
+const close_sumoTrafficDB = async () => {
+    if (db) {
+        db = null;
+        console.log("🔌 Connexion à la base de données 'sumo_traffic' fermée.");
+    }
+};
+
+module.exports = { connect_sumoTrafficDB, get_sumoTrafficDB, close_sumoTrafficDB };
+--------------------------------------------------
+Chemin: ./src/controllers/sumoTrafficController.js
+Taille: 2175 octets
+Date de modification: 2025-04-14 13:21:51.206437200 +0100
+Contenu:
+const {get_sumoTrafficDB} = require("../config/db/sumoTraficDB");
+const {connect_congestionDB} = require("../config/db/congestionDB");
+const {congestionEvaluation} = require("../evaluation/congestionEvaluation");
+const {saveCongestionData} = require("../config/db/saveCongestionData");
+
+const get__simulationData = async () => {
+    try {
+        const db = await get_sumoTrafficDB();
+
+        if (!db) {
+            throw new Error("❌ Base de données non connectée !");
+        }
+
+        const simulation_data = await db.collection("traffic_data").find().toArray();
+
+        console.log("Données récupérées du simulateur :", simulation_data.length, "enregistrements trouvés");
+        return simulation_data;
+    } catch (error) {
+        console.error("❌ Erreur lors de la récupération des données :", error);
+        throw error;
+    }
+};
+
+const save_congestionData_to_DB = async (data) => {
+    try {
+        console.log("🔄 Connexion à la base de données de congestion...");
+        await connect_congestionDB();
+
+        console.log("📊 Calcul des données de congestion...");
+        const congestionData = congestionEvaluation(data);
+
+        console.log("💾 Sauvegarde des données de congestion en cours...");
+        await saveCongestionData(congestionData);
+
+        console.log("✅ Données de congestion enregistrées avec succès !");
+    } catch (error) {
+        console.error("❌ Erreur lors de la sauvegarde des données de congestion :", error);
+        throw error;
+    }
+};
+
+const congestionDataToDB = async (req, res) => {
+    try {
+        console.log("📥 Début du processus de récupération et sauvegarde des données...");
+
+        const simulation_data = await get__simulationData();
+        await save_congestionData_to_DB(simulation_data);
+
+        res.json({ message: "✅ Données de congestion enregistrées avec succès" });
+    } catch (error) {
+        console.error("❌ Erreur :", error);
+        res.status(500).json({ error: "Erreur lors de la récupération et de l'enregistrement des données" });
+    }
+};
+
+module.exports = { congestionDataToDB };
+--------------------------------------------------
+Chemin: ./src/evaluation/congestionEvaluation.js
+Taille: 4982 octets
+Date de modification: 2025-06-24 14:53:22.820278300 +0100
+Contenu:
+const congestionEvaluation = (data) => {
+
+    if (!data || data.length === 0) {
+        console.log("ℹ️ Aucune donnée de simulation fournie pour l'évaluation.");
+        return [];
+    }
+
+    
+    // Formater les données
+    const formattedData = data.map(item => {
+        const lane_id = item.lane_id; // identifiant de la route
+        const lane_length = parseFloat(item.lane_length) / 1000; // longeur de la route en km
+        const max_speed = parseFloat(item.max_speed) * 3.6;     // vitesse maximale en km/h
+        const vehicles = item.vehicles; // informations sur les vehicles
+        const veh_count = vehicles.length;
+        const halting_number = item.halting_number;
+
+
+
+        // Calculs
+        const mean_speed = getMeanSpeed(vehicles, max_speed); // vitesse moyenne en km/h
+
+        const density = getDensity(veh_count, lane_length); // densité de la circulation en voitures/km
+        const trafficFlow = density * mean_speed; // debit de la circulation
+        const travel_time = getTravelTime(lane_length, mean_speed, max_speed); // temps de trajet en minutes
+        const occupancy_rate = getOccupancyRate(vehicles, lane_length);
+        // const congestion_rate = getCongestionRate(max_speed, mean_speed);
+        const congestionLevel = getServiceLevelIndex(density);
+        // const lane_capacity = getLaneCapacity(vehicles, lane_length);
+        const date = new Date(parseFloat(item.timestamp) * 1000);
+        const shape = item.shape;
+
+
+        // Retourner un objet formaté
+        return {
+            lane_id,
+            mean_speed,
+            density,
+            trafficFlow,
+            travel_time,
+            occupancy_rate,
+            // congestion_rate,
+            congestionLevel,
+            // lane_capacity,
+            date,
+            shape,
+            message: generateAlertMessage(congestionLevel, lane_id),
+            color: densityColors[congestionLevel],
+            timestamp: new Date(),
+            raw_data: {
+                halting_number: halting_number,
+                max_speed: max_speed,
+                vehicle_count: veh_count, 
+            }
+        };
+    });
+
+    return formattedData;
+};
+
+
+const getDensity = (nb_vehicles, lane_length) => {
+    return (nb_vehicles / lane_length);
+}
+
+// const getCongestionRate = (max_speed, mean_speed) =>{
+//     return (max_speed-mean_speed)/max_speed;
+// }
+
+
+const getOccupancyRate = (vehicles, lane_length) => {
+    const veh_count = vehicles.length;
+    let total_length = 0.0;
+
+    vehicles.forEach(veh => {
+        total_length += parseFloat(veh.length) + parseFloat(veh.minGap)
+    })
+
+    return veh_count > 0 ? (veh_count * (total_length / 1000)) / lane_length : 0;
+}
+
+const getMeanSpeed = (vehicules, max_speed) => {
+    let total_speed = 0.0;
+    const veh_count = vehicules.length;
+
+    vehicules.forEach(veh => {
+        total_speed += parseFloat(veh.speed);
+    });
+
+    // convertir la vitesse de m/s en km/h
+    return veh_count > 0 ? (total_speed * 3.6) / veh_count : max_speed;
+}
+
+
+const getTravelTime = (lane_length, mean_speed, max_speed) => {
+    const travel_time = lane_length / (mean_speed > 0 ? mean_speed : max_speed);
+    return travel_time * 60;
+}
+
+
+const getServiceLevelIndex = (density) => {
+    if (density < 11) {
+        return 'A'; // Libre
+    } else if (density >= 11 && density < 18) {
+        return 'B'; // Stable
+    } else if (density >= 18 && density < 26) {
+        return 'C'; // Modéré
+    } else if (density >= 26 && density < 35) {
+        return 'D'; // Dense
+    } else if (density >= 35 && density < 45) {
+        return 'E'; // Presque saturé
+    } else if (density >= 45) {
+        return 'F'; // Saturation
+    }
+};
+
+// Générer un message d'alerte en fonction du niveau de congestion
+function generateAlertMessage(level, laneId) {
+    switch (level) {
+        case "A":
+            return `🚗 Circulation fluide sur la voie ${laneId}. Profitez du trajet !`;
+        case "B":
+            return `🚙 Circulation stable sur la voie ${laneId}. Aucun ralentissement majeur.`;
+        case "C":
+            return `⚠️ Trafic modéré sur la voie ${laneId}. Restez attentif.`;
+        case "D":
+            return `🔴 ATTENTION : Circulation dense sur la voie ${laneId}. Possibles ralentissements.`;
+        case "E":
+            return `⚠️ ALERTE : La voie ${laneId} est presque saturée. Envisagez un itinéraire alternatif.`;
+        case "F":
+            return `🚨 URGENCE : La voie ${laneId} est saturée ! Évitez cette zone si possible.`;
+        default:
+            return `ℹ️ Données de trafic indisponibles pour la voie ${laneId}.`;
+    }
+}
+
+const densityColors = {
+    A: "#34A853",
+    B: "#A3C644",
+    C: "#F4C20D",
+    D: "#FB8C00",
+    E: "#EA4335",
+    F: "#B71C1C",
+};
+
+
+
+module.exports = { congestionEvaluation };--------------------------------------------------
+Chemin: ./src/routes/sumoTrafficRoutes.js
+Taille: 300 octets
+Date de modification: 2025-04-14 13:21:51.209441500 +0100
+Contenu:
+const express = require("express");
+const { congestionDataToDB } = require("../controllers/sumoTrafficController");
+
+const router = express.Router();
+
+router.post("/simulation-data", congestionDataToDB);
+console.log("Route POST /api/simulation-data enregistrée");
+
+module.exports = router;

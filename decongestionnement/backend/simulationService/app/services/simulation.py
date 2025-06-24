@@ -11,7 +11,7 @@ import threading
 
 
 
-
+ 
 class SimulationService:
     def __init__(self, config):
         self.config = config
@@ -84,7 +84,7 @@ class SimulationService:
             
             net = sumolib.net.readNet(f"{self.sumo_config_path}/map.net.xml")
             lanes = traci.lanearea.getIDList()
-            street_names = get_street_names(lanes)
+            # street_names = get_street_names(lanes)
             
             for step in range(self.current_step, simulation_duration):
                 if not self.simulation_running:

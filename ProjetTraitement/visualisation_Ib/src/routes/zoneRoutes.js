@@ -4,7 +4,7 @@ const router = express.Router();
 const { MongoClient } = require('mongodb');
 const axios = require('axios');
 router.get('/api/accidents/zones', async (req, res) => {
-  const client = new MongoClient('mongodb://localhost:27017');
+  const client = new MongoClient('mongodb://127.0.0.1:27017');
   try {
     await client.connect();
     const db = client.db('accidentsDB');

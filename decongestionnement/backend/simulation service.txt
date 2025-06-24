@@ -1,66 +1,33 @@
-﻿--------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\.flaskenv
+--------------------------------------------------
+Chemin: ./.env
+Taille: 147 octets
+Date de modification: 2025-06-24 11:09:12.438170100 +0100
+Contenu:
+MONGO_URI=mongodb://localhost:27017/sumo_traffic
+MONGO_DB_NAME=sumo_traffic
+SECRET_KEY=dev-key
+API_URL=http://127.0.0.1:5001/api/simulation-data--------------------------------------------------
+Chemin: ./.flaskenv
 Taille: 55 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.229069000 +0100
 Contenu:
 FLASK_APP=wsgi.py
 FLASK_ENV=development
-FLASK_DEBUG=1
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app.py
-Taille: 180 octets
-Date de modification: 04/14/2025 00:18:42
-Contenu:
-from app import create_app
-from config.settings import ProductionConfig
-
-app = create_app(ProductionConfig)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3600)
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\extensions.py
+FLASK_DEBUG=1--------------------------------------------------
+Chemin: ./app/extensions.py
 Taille: 54 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.232072300 +0100
 Contenu:
 from flask_pymongo import PyMongo
 
-mongo = PyMongo()
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\__init__.py
-Taille: 605 octets
-Date de modification: 04/14/2025 00:18:42
-Contenu:
-from flask import Flask
-from config.settings import Config
-from flask_cors import CORS
-
-def create_app(config_class=Config):
-    app = Flask(__name__)
-    CORS(app)
-    app.config.from_object(config_class)
-    
-    # Initialize extensions
-    from .extensions import mongo
-    mongo.init_app(app)
-    
-    # Initialize services
-    from .services.simulation import SimulationService
-    app.simulation_service = SimulationService(app.config)
-    
-    # Register blueprints
-    from .routes.api import api_bp
-    app.register_blueprint(api_bp, url_prefix='/api/v1')
-    
-    return app
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\models\traffic.py
-Taille: 1156 octets
-Date de modification: 04/14/2025 00:18:42
+mongo = PyMongo()--------------------------------------------------
+Chemin: ./app/models/traffic.py
+Taille: 1158 octets
+Date de modification: 2025-06-24 12:00:41.478825000 +0100
 Contenu:
 from datetime import datetime
 from ..extensions import mongo
-from bson import ObjectId
+# from bson import ObjectId
 
 class TrafficData:
     @staticmethod
@@ -93,18 +60,16 @@ class TrafficData:
         """Get latest traffic data"""
         return list(TrafficData.get_collection().find()
                    .sort("timestamp", -1)
-                   .limit(limit))
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\models\__init__.py
+                   .limit(limit))--------------------------------------------------
+Chemin: ./app/models/__init__.py
 Taille: 67 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.233106200 +0100
 Contenu:
 # Import models for easier access
-from .traffic import TrafficData
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\routes\api.py
-Taille: 4356 octets
-Date de modification: 04/14/2025 00:18:42
+from .traffic import TrafficData--------------------------------------------------
+Chemin: ./app/routes/api.py
+Taille: 4392 octets
+Date de modification: 2025-06-24 11:36:59.968284000 +0100
 Contenu:
 # app/routes/api.py
 from flask import Blueprint, jsonify, request, current_app
@@ -123,7 +88,7 @@ def start_simulation():
     data = request.get_json() or {}
     duration = data.get('duration', 1500)
     
-    # Utiliser l'instance stockÃ©e dans l'application
+    # Utiliser l'instance stockée dans l'application
     result = current_app.simulation_service.run_simulation(simulation_duration=duration)
     return jsonify(result), 200 if result["status"] != "error" else 400
 
@@ -158,7 +123,6 @@ def resume_simulation():
     result = current_app.simulation_service.resume_simulation()
     return jsonify(result), 200 if result["status"] != "error" else 400
 
-# Mettez Ã  jour aussi la mÃ©thode get_simulation_status
 @api_bp.route('/simulation-status', methods=['GET'])
 @handle_errors
 def simulation_status():
@@ -173,64 +137,64 @@ def simulation_status():
             "current_step": status.get("current_step", 0)
         }
     }), 200
+    
+    
 
-@api_bp.route('/prepare-simulation', methods=['POST'])
-@handle_errors
-def prepare_simulation():
-    """Prepare SUMO files for simulation"""
-    sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
-    files = sumo_utils.prepare_simulation_files()
-    return jsonify({"status": "success", "files": files}), 200
+# @api_bp.route('/prepare-simulation', methods=['POST'])
+# @handle_errors
+# def prepare_simulation():
+#     """Prepare SUMO files for simulation"""
+#     sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
+#     files = sumo_utils.prepare_simulation_files()
+#     return jsonify({"status": "success", "files": files}), 200
 
-@api_bp.route('/traffic-data', methods=['GET'])
-@handle_errors
-def get_traffic_data():
-    """Get recent traffic data"""
-    hours = request.args.get('hours', 1, type=int)
-    traffic_service = TrafficDataService()
-    data = traffic_service.get_recent_traffic_data(hours=hours)
-    return jsonify({"status": "success", "count": len(data), "data": data}), 200
+# @api_bp.route('/traffic-data', methods=['GET'])
+# @handle_errors
+# def get_traffic_data():
+#     """Get recent traffic data"""
+#     hours = request.args.get('hours', 1, type=int)
+#     traffic_service = TrafficDataService()
+#     data = traffic_service.get_recent_traffic_data(hours=hours)
+#     return jsonify({"status": "success", "count": len(data), "data": data}), 200
 
-@api_bp.route('/congestion-stats', methods=['GET'])
-@handle_errors
-def get_congestion_stats():
-    """Get congestion statistics"""
-    traffic_service = TrafficDataService()
-    stats = traffic_service.get_congestion_stats()
-    return jsonify({"status": "success", "data": stats}), 200
+# @api_bp.route('/congestion-stats', methods=['GET'])
+# @handle_errors
+# def get_congestion_stats():
+#     """Get congestion statistics"""
+#     traffic_service = TrafficDataService()
+#     stats = traffic_service.get_congestion_stats()
+#     return jsonify({"status": "success", "data": stats}), 200
 
-@api_bp.route('/lane-data/<lane_id>', methods=['GET'])
-@handle_errors
-def get_lane_data(lane_id):
-    """Get historical data for a specific lane"""
-    limit = request.args.get('limit', 100, type=int)
-    traffic_service = TrafficDataService()
-    data = traffic_service.get_lane_history(lane_id, limit=limit)
-    return jsonify({"status": "success", "count": len(data), "data": data}), 200
+# @api_bp.route('/lane-data/<lane_id>', methods=['GET'])
+# @handle_errors
+# def get_lane_data(lane_id):
+#     """Get historical data for a specific lane"""
+#     limit = request.args.get('limit', 100, type=int)
+#     traffic_service = TrafficDataService()
+#     data = traffic_service.get_lane_history(lane_id, limit=limit)
+#     return jsonify({"status": "success", "count": len(data), "data": data}), 200
 
-@api_bp.route('/network-metadata', methods=['GET'])
-@handle_errors
-def get_network_metadata():
-    """Get network metadata"""
-    sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
-    metadata = sumo_utils.extract_network_metadata()
-    return jsonify({"status": "success", "data": metadata}), 200
+# @api_bp.route('/network-metadata', methods=['GET'])
+# @handle_errors
+# def get_network_metadata():
+#     """Get network metadata"""
+#     sumo_utils = SumoUtilsService(current_app.config.SUMO_CONFIG_PATH)
+#     metadata = sumo_utils.extract_network_metadata()
+#     return jsonify({"status": "success", "data": metadata}), 200
 
-@api_bp.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({"status": "healthy"}), 200
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\routes\__init__.py
+# @api_bp.route('/health', methods=['GET'])
+# def health_check():
+#     """Health check endpoint"""
+#     return jsonify({"status": "healthy"}), 200--------------------------------------------------
+Chemin: ./app/routes/__init__.py
 Taille: 62 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.236067000 +0100
 Contenu:
 # Import blueprints for easier access
-from .api import api_bp
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\services\simulation.py
-Taille: 7570 octets
-Date de modification: 04/14/2025 00:18:42
+from .api import api_bp--------------------------------------------------
+Chemin: ./app/services/simulation.py
+Taille: 7573 octets
+Date de modification: 2025-06-24 11:53:14.844699700 +0100
 Contenu:
 # app/services/simulation.py
 import os
@@ -245,7 +209,7 @@ import threading
 
 
 
-
+ 
 class SimulationService:
     def __init__(self, config):
         self.config = config
@@ -253,10 +217,10 @@ class SimulationService:
                             os.path.join(os.path.dirname(__file__), '../../app/static/sumo_files'))
         self.api_url = getattr(config, 'API_URL', 'http://127.0.0.1:5001/api/simulation-data')
         self.simulation_running = False
-        self.simulation_paused = False  # Nouvel Ã©tat pour la pause
+        self.simulation_paused = False  # Nouvel état pour la pause
         self.simulation_thread = None
         self.traci_connection_active = False
-        self.pause_event = threading.Event()  # Pour gÃ©rer la pause
+        self.pause_event = threading.Event()  # Pour gérer la pause
         self.current_step = 0  # Pour suivre la progression
             
     def run_simulation(self, simulation_duration=1500):
@@ -301,7 +265,7 @@ class SimulationService:
             return {"status": "error", "message": "Simulation is not paused"}
             
         self.simulation_paused = False
-        self.pause_event.clear()  # DÃ©bloquer le thread
+        self.pause_event.clear()  # Débloquer le thread
         return {"status": "resumed", "message": "Simulation resumed"}
 
     def _run_simulation_thread(self, simulation_duration):
@@ -318,7 +282,7 @@ class SimulationService:
             
             net = sumolib.net.readNet(f"{self.sumo_config_path}/map.net.xml")
             lanes = traci.lanearea.getIDList()
-            street_names = get_street_names(lanes)
+            # street_names = get_street_names(lanes)
             
             for step in range(self.current_step, simulation_duration):
                 if not self.simulation_running:
@@ -347,7 +311,7 @@ class SimulationService:
             self.traci_connection_active = False
             self.simulation_running = False
             self.simulation_paused = False
-            self.current_step = 0  # RÃ©initialisation
+            self.current_step = 0  # Réinitialisation
     
     def get_simulation_status(self):
         """Get current simulation status"""
@@ -366,12 +330,12 @@ class SimulationService:
             
         self.simulation_running = False
         self.simulation_paused = False
-        self.pause_event.clear()  # DÃ©bloquer le thread si en pause
+        self.pause_event.clear()  # Débloquer le thread si en pause
         
         if self.simulation_thread and self.simulation_thread.is_alive():
             self.simulation_thread.join(timeout=10)
             
-        self.current_step = 0  # RÃ©initialiser le compteur
+        self.current_step = 0  # Réinitialiser le compteur
         return {"status": "stopped", "message": "Simulation stopped successfully"}
     
     def _process_lane_data(self, net, lanes):
@@ -416,11 +380,10 @@ class SimulationService:
             response = requests.post(self.api_url, json={"step": step})
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            print(f"API notification error: {e}")
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\services\sumo_utils.py
+            print(f"API notification error: {e}")--------------------------------------------------
+Chemin: ./app/services/sumo_utils.py
 Taille: 2351 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.239064300 +0100
 Contenu:
 import os
 import xml.etree.ElementTree as ET
@@ -482,11 +445,10 @@ class SumoUtilsService:
         metadata_file = os.path.join(self.config_path, "network_metadata.json")
         write_json_file(metadata_file, metadata)
         
-        return metadata
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\services\traffic_data.py
+        return metadata--------------------------------------------------
+Chemin: ./app/services/traffic_data.py
 Taille: 1561 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.240075400 +0100
 Contenu:
 from datetime import datetime, timedelta
 from ..models.traffic import TrafficData
@@ -526,20 +488,18 @@ class TrafficDataService:
         """Get historical data for a specific lane"""
         return list(TrafficData.get_collection().find({"lane_id": lane_id})
                    .sort("timestamp", -1)
-                   .limit(limit))
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\services\__init__.py
+                   .limit(limit))--------------------------------------------------
+Chemin: ./app/services/__init__.py
 Taille: 166 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.238064000 +0100
 Contenu:
 # Import services for easier access
 from .simulation import SimulationService
 from .traffic_data import TrafficDataService
-from .sumo_utils import SumoUtilsService
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\utils\decorators.py
+from .sumo_utils import SumoUtilsService--------------------------------------------------
+Chemin: ./app/utils/decorators.py
 Taille: 1086 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.325478600 +0100
 Contenu:
 from functools import wraps
 from flask import jsonify
@@ -572,11 +532,10 @@ def validate_simulation_config(f):
     def wrapper(*args, **kwargs):
         # Add validation logic here
         return f(*args, **kwargs)
-    return wrapper
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\utils\file_handlers.py
+    return wrapper--------------------------------------------------
+Chemin: ./app/utils/file_handlers.py
 Taille: 1404 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.326469400 +0100
 Contenu:
 import os
 import json
@@ -614,11 +573,10 @@ def get_float_value(element: ET.Element, attribute: str, default: Optional[float
 def ensure_directory_exists(dir_path: str) -> None:
     """Ensure directory exists, create if it doesn't"""
     if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\utils\sumo_helpers.py
-Taille: 4989 octets
-Date de modification: 04/14/2025 00:18:42
+        os.makedirs(dir_path)--------------------------------------------------
+Chemin: ./app/utils/sumo_helpers.py
+Taille: 4967 octets
+Date de modification: 2025-06-24 11:58:59.053594800 +0100
 Contenu:
 # app/utils/sumo_helpers.py
 import traci
@@ -636,7 +594,7 @@ def configure_simulation(sumo_config_path: str) -> List[str]:
         "--delay", "0",
         "--start",
         "--scale", "5",
-        "--quit-on-end",  # Ajout de cette option pour fermer proprement
+        "--quit-on-end",  # pour fermer proprement
         "--no-internal-links",  # Ignore les liens internes
     ]
 
@@ -744,20 +702,60 @@ def generate_sensors_file(net_file: str, sensors_file: str) -> None:
 def get_lane_info(net_file: str, lanes_file: str) -> None:
     """Extract lane information from network file"""
     # Implementation from your original getLanes_info function
-    pass
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\app\utils\__init__.py
+    pass--------------------------------------------------
+Chemin: ./app/utils/__init__.py
 Taille: 250 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.324469400 +0100
 Contenu:
 # Import utility modules for easier access
 from .file_handlers import read_json_file, write_json_file, read_xml_file
 from .sumo_helpers import configure_simulation, get_street_names
-from .decorators import handle_errors, validate_simulation_config
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\config\init.py
+from .decorators import handle_errors, validate_simulation_config--------------------------------------------------
+Chemin: ./app/__init__.py
+Taille: 731 octets
+Date de modification: 2025-06-24 11:17:47.758386100 +0100
+Contenu:
+from flask import Flask
+from config.settings import Config
+from flask_cors import CORS
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    CORS(app)
+    app.config.from_object(config_class)
+    
+    # Initialize extensions
+    from .extensions import mongo
+    mongo.init_app(app)
+    
+    # Initialize services
+    from .services.simulation import SimulationService
+    app.simulation_service = SimulationService(app.config)
+    # print("Simulation service initialized with config:", app.config)
+    
+    # Register blueprints
+    from .routes.api import api_bp
+    app.register_blueprint(api_bp, url_prefix='/api/v1')
+    
+    return app
+
+if __name__ == "__main__":
+    app = create_app()--------------------------------------------------
+Chemin: ./app.py
+Taille: 214 octets
+Date de modification: 2025-06-24 11:20:23.844484300 +0100
+Contenu:
+from app import create_app
+from config.settings import ProductionConfig
+
+app = create_app(ProductionConfig)
+
+if __name__ == "__main__":
+    # print("App :", app.config)
+    app.run(host="0.0.0.0", port=3600)--------------------------------------------------
+Chemin: ./config/init.py
 Taille: 408 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.329470900 +0100
 Contenu:
 from .settings import Config, DevelopmentConfig, TestingConfig, ProductionConfig
 
@@ -769,11 +767,10 @@ def get_config(config_name):
         'production': ProductionConfig,
         'default': DevelopmentConfig
     }
-    return config_dict.get(config_name, config_dict['default'])
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\config\production.py
+    return config_dict.get(config_name, config_dict['default'])--------------------------------------------------
+Chemin: ./config/production.py
 Taille: 497 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.329470900 +0100
 Contenu:
 from .settings import Config
 import os
@@ -787,11 +784,10 @@ class ProductionConfig(Config):
     def init_app(cls, app):
         Config.init_app(app)
         # Production-specific initialization
-        app.config['MONGO_CONNECT'] = False  # For better connection handling
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\config\settings.py
+        app.config['MONGO_CONNECT'] = False  # For better connection handling--------------------------------------------------
+Chemin: ./config/settings.py
 Taille: 626 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.330468700 +0100
 Contenu:
 import os
 from dotenv import load_dotenv
@@ -813,11 +809,10 @@ class TestingConfig(Config):
     MONGO_URI = 'mongodb://localhost:27017/test_db'
 
 class ProductionConfig(Config):
-    pass
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\config\__init__.py
+    pass--------------------------------------------------
+Chemin: ./config/__init__.py
 Taille: 579 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.328471700 +0100
 Contenu:
 import os
 from dotenv import load_dotenv
@@ -838,11 +833,10 @@ class TestingConfig(Config):
     MONGO_URI = 'mongodb://localhost:27017/test_db'
 
 class ProductionConfig(Config):
-    pass
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\tests\conftest.py
+    pass--------------------------------------------------
+Chemin: ./tests/conftest.py
 Taille: 349 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.332474800 +0100
 Contenu:
 import pytest
 from app import create_app
@@ -858,16 +852,10 @@ def app():
 
 @pytest.fixture
 def client(app):
-    return app.test_client()
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\tests\__init__.py
-Taille: 0 octets
-Date de modification: 04/14/2025 00:18:42
-Contenu:
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\tests\integration\test_api.py
+    return app.test_client()--------------------------------------------------
+Chemin: ./tests/integration/test_api.py
 Taille: 1118 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.334470100 +0100
 Contenu:
 import json
 import pytest
@@ -899,11 +887,10 @@ def test_health_check(client):
     response = client.get('/api/v1/health')
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert data["status"] == "healthy"
---------------------------------------------------
-Chemin: C:\Users\pc\Documents\workflow\ilisi2\IoT_Project\decongestionnement\backend\simulationService\tests\unit\test_simulation.py
+    assert data["status"] == "healthy"--------------------------------------------------
+Chemin: ./tests/unit/test_simulation.py
 Taille: 1713 octets
-Date de modification: 04/14/2025 00:18:42
+Date de modification: 2025-04-14 13:21:51.335470000 +0100
 Contenu:
 import pytest
 from unittest.mock import patch, MagicMock
@@ -948,4 +935,9 @@ def test_run_simulation(mock_configure, mock_traci):
     assert service._notify_api.call_count == 5
     
     # Verify simulation cleanup
-    mock_traci.close.assert_called_once()
+    mock_traci.close.assert_called_once()--------------------------------------------------
+Chemin: ./tests/__init__.py
+Taille: 0 octets
+Date de modification: 2025-04-14 13:21:51.331469200 +0100
+Contenu:
+[Le contenu n'a pas pu être lu - fichier binaire ou verrouillé]

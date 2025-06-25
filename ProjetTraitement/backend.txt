@@ -1,0 +1,766 @@
+--------------------------------------------------
+Chemin: ./.env
+Taille: 124 octets
+Date de modification: 2025-06-23 20:04:14.137337600 +0100
+Contenu:
+MONGO_URI=mongodb://127.0.0.1:27017/Mydb
+PORT=3010
+TRAFFIC_API_URL=https://data.cityofnewyork.us/resource/i4gi-tjb9.json
+--------------------------------------------------
+Chemin: ./models/Accident.js
+Taille: 965 octets
+Date de modification: 2025-06-23 18:28:18.674929200 +0100
+Contenu:
+const mongoose = require('mongoose');
+
+const AccidentSchema = new mongoose.Schema({
+    crash_date: { type: Date, required: true },
+    crash_time: { type: String,required:true }, // Ajout d'une valeur par défaut
+    on_street_name: { type: String, required: true }, 
+    number_of_persons_injured: { type: Number,reuired:true },
+    number_of_persons_killed: { type: Number, required:true },
+    contributing_factor_vehicle_1: { type: String,reuired:true },
+    vehicle_type_code1: { type: String,reuired:true },
+    collision_id: { type: String, required: true, unique: true },
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
+}, { timestamps: true }); // Ajoute automatiquement createdAt et updatedAt
+
+// Index sur on_street_name pour optimiser les requêtes
+AccidentSchema.index({ on_street_name: 1 });
+
+// Exportation des modèles
+module.exports =mongoose.model('Accident', AccidentSchema);
+--------------------------------------------------
+Chemin: ./models/AccidentbyHour.js
+Taille: 520 octets
+Date de modification: 2025-06-23 18:28:18.675929500 +0100
+Contenu:
+const mongoose = require("mongoose");
+
+const accidentHourSchema = new mongoose.Schema({
+    hour:{type:String,required:true},
+    zone: {type:String,required:true},
+    totalAccidents: {type:Number,required:true},
+    totalInjuries:{type:Number,required:true},
+    totalDeaths:{type:Number,required:true},
+    longitude:{type:Number,required:true},
+    latitude:{type:Number,required:true},
+    riskScore:{type:Number,required:true}
+});
+
+module.exports = mongoose.model("CrashbyHour", accidentHourSchema);
+--------------------------------------------------
+Chemin: ./models/Stats.js
+Taille: 599 octets
+Date de modification: 2025-06-23 18:28:18.676929100 +0100
+Contenu:
+const mongoose = require('mongoose');
+const statSchema = new mongoose.Schema({
+    on_street_name: { type: String, required: true }, // Ajout de required si le champ est essentiel
+    totalInjured: { type: Number,required:true },
+    totalKilled: { type: Number, required:true },
+    totalAccidents: { type: Number, required:true },
+    latitude: { type: Number,required:true },
+    longitude: { type: Number,required:true },
+    indice_de_risque: { type: Number,required:true },
+    riskIndex:{type:Number,required:true},
+}); 
+
+module.exports = mongoose.model('Stat', statSchema);
+    --------------------------------------------------
+Chemin: ./package.json
+Taille: 504 octets
+Date de modification: 2025-06-23 18:28:18.682929600 +0100
+Contenu:
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.11.0",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
+--------------------------------------------------
+Chemin: ./routes/accidents.js
+Taille: 7675 octets
+Date de modification: 2025-06-23 18:28:18.686937500 +0100
+Contenu:
+// Importation des modules nécessaires
+const express = require('express'); // Framework pour créer des applications web et API
+const Accident = require('../models/Accident'); // Modèle pour les données d'accidents
+const statModel = require('../models/Stats'); // Modèle pour les statistiques
+const fetchNYCAccidentData = require('../services/fetchNYCData'); // Service pour récupérer les données d'accidents de NYC
+const cleanAccidentData = require('../services/cleanData'); // Service pour nettoyer les données d'accidents
+const calculateRiskByZone = require('../services/riskByZone'); // Service pour calculer le risque par zone
+const calculateRiskByHourAndZone = require('../services/riskByHourAndZone'); // Service pour calculer le risque par heure et zone
+const crash_current = require('../services/CrashperPeriod'); // Service pour calculer les accidents par période
+const crashModel = require('../models/AccidentbyHour'); // Modèle pour les accidents par heure
+const topZone = require('../services/Topdangerous'); // Service pour identifier les zones les plus dangereuses
+const router = express.Router(); // Création d'un routeur Express
+
+// Route pour récupérer tous les accidents, triés par date décroissante
+router.get('/', async (req, res) => {
+    try {
+        const accidents = await Accident.find().sort({ crash_date: -1 });
+        res.status(200).json(accidents);
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de la récupération", error: err.message });
+    }
+});
+
+// Route pour récupérer les statistiques des accidents par période
+router.get('/crash-per-period', async (req, res) => {
+    try {
+        const crashPerPeriod = await statModel.find();
+        res.status(200).json(crashPerPeriod);
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors du calcul du crash par période", error: err.message });
+    }
+});
+
+
+// Route pour calculer le risque par zone
+router.get('/risk-by-zone', async (req, res) => {
+    try {
+        const accidents = await Accident.find();
+        const riskByZone = calculateRiskByZone(accidents);
+        res.status(200).json(riskByZone);
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors du calcul du risque par zone", error: err.message });
+    }
+});
+
+// Route pour récupérer les zones les plus dangereuses
+router.get('/top-dangerous-zones', async (req, res) => {
+    try {
+        const crashPerPeriod = await statModel.find();
+        const topZones = topZone(crashPerPeriod, 10); // Top 10 des zones les plus dangereuses
+        console.log("topZones :", topZones);
+        res.status(200).json(topZones);
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors du calcul du top des zones les plus dangereuses", error: err.message });
+    }
+});
+
+// Route pour calculer le risque par heure et zone
+router.get('/risk-by-hour-and-zone', async (req, res) => {
+    try {
+        const accidents = await Accident.find();
+        const riskByHourAndZone = calculateRiskByHourAndZone(accidents);
+        res.status(200).json(riskByHourAndZone);
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors du calcul du risque par heure et zone", error: err.message });
+    }
+});
+
+// Route pour importer et nettoyer les données d'accidents
+router.post('/', async (req, res) => {
+    try {
+        const rawData = await fetchNYCAccidentData(); // Récupération des données brutes
+        const cleanedData = await cleanAccidentData(rawData); // Nettoyage des données
+        await Accident.insertMany(cleanedData); // Insertion des données nettoyées dans MongoDB
+        res.status(201).json({ 
+            message: 'Accidents importés et traités avec succès', 
+            accidentCount: cleanedData.length, 
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de l'importation", error: err.message });
+    }
+});
+
+// Route pour calculer et insérer les statistiques des accidents par période
+router.post('/crash-per-period', async (req, res) => {
+    try {
+        const accidents = await Accident.find();
+        const crashPerPeriod = crash_current(accidents);
+        statModel.insertMany(crashPerPeriod);
+        res.status(200).json({ message: "Crash par période inséré avec succès" });
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors du calcul du crash par période", error: err.message });
+    }
+});
+
+// Route pour calculer et insérer le risque par heure et zone
+router.post('/risk-by-hour-and-zone', async (req, res) => {
+    try {
+        const accidents = await Accident.find();
+        const riskByHourAndZone = calculateRiskByHourAndZone(accidents);
+        await crashModel.insertMany(riskByHourAndZone);
+        res.status(200).json({ message: "Risque par heure et zone inséré avec succès" });
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de l'insertion du risque par heure et zone", error: err.message });
+    }
+});
+
+// Route pour mettre à jour les données d'accidents avec de nouvelles entrées
+router.post('/update', async (req, res) => {
+    try {
+        const existingIds = new Set(await Accident.distinct("collision_id")); // Récupération des IDs existants
+        const rawData = await fetchNYCAccidentData();
+        const cleanedData = await cleanAccidentData(rawData);
+        const newAccidents = cleanedData.filter(accident => 
+            accident.collision_id && !existingIds.has(accident.collision_id)
+        ); // Filtrage des nouveaux accidents
+        if (newAccidents.length === 0) {
+            return res.status(200).json({ message: "Aucun nouvel accident à ajouter" });
+        }
+        await Accident.insertMany(newAccidents); // Insertion des nouveaux accidents
+        res.status(201).json({ 
+            message: "Mise à jour terminée", 
+            newAccidentsCount: newAccidents.length, 
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de la mise à jour", error: err.message });
+    }
+});
+
+// Route pour mettre à jour le risque par zone
+router.post('/risk-by-zone/update', async (req, res) => {
+    try {
+        const accidents = await Accident.find();
+        const riskByZone = calculateRiskByZone(accidents);
+        await statModel.replaceOne({}, riskByZone, { upsert: true }); // Mise à jour ou insertion
+        res.status(200).json({ message: "Risque par zone mis à jour avec succès" });
+    } catch (err) {
+        console.error("Erreur lors de la mise à jour du risque par zone :", err);
+        res.status(500).json({ message: "Erreur lors de la mise à jour", error: err.message });
+    }
+});
+
+// Route pour mettre à jour les statistiques des accidents par période
+router.post('/crash-per-period/update', async (req, res) => {
+    try {
+        const accidents = await Accident.find();
+        const crashPerPeriod = crash_current(accidents);
+        const filter = {}; // Document unique
+        const update = { $set: crashPerPeriod };
+        const options = { upsert: true, new: true }; // Upsert = insérer si inexistant
+        const result = await statModel.findOneAndUpdate(filter, update, options);
+        res.status(200).json({ message: "Crash par période mis à jour avec succès", data: result });
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de la mise à jour", error: err.message });
+    }
+});
+
+// Exportation du routeur pour l'utiliser dans l'application principale
+module.exports = router;--------------------------------------------------
+Chemin: ./server.js
+Taille: 2460 octets
+Date de modification: 2025-06-23 18:28:18.687932500 +0100
+Contenu:
+// Charger les variables d'environnement depuis un fichier .env
+require('dotenv').config();
+
+// Importer les modules nécessaires
+const express = require('express'); // Framework pour créer des applications web et API
+const mongoose = require('mongoose'); // Bibliothèque pour interagir avec MongoDB
+const accidentRoutes = require('./routes/accidents'); // Routes pour gérer les données d'accidents
+const cron = require('node-cron'); // Module pour planifier des tâches récurrentes
+const axios = require('axios'); // Module pour effectuer des requêtes HTTP
+const cors = require('cors'); // Middleware pour gérer les politiques de partage des ressources (CORS)
+
+// Initialiser une application Express
+const app = express();
+
+// Activer CORS pour permettre les requêtes provenant d'autres domaines
+app.use(cors());
+
+// Activer le traitement des requêtes JSON
+app.use(express.json());
+
+// Ajouter les routes pour les accidents
+app.use('/accidents', accidentRoutes);
+
+// Connexion à MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+   
+})
+  .then(() => console.log("Connecté à MongoDB")) // Message en cas de succès
+  .catch(err => console.error("Erreur de connexion à MongoDB", err)); // Message en cas d'erreur
+
+// Planifier une tâche cron pour mettre à jour les données toutes les 1 minute
+cron.schedule('*/5 * * * *', async () => {
+  console.log("Mise à jour automatique des accidents...");
+  try {
+    // Envoyer une requête POST pour mettre à jour les données d'accidents
+    const response = await axios.post('http://localhost:3010/accidents/update');
+    // Envoyer une requête POST pour mettre à jour les statistiques des accidents par période
+    const response1 = await axios.post('http://localhost:3010/accidents/crash-per-period/update');
+    console.log("Mise à jour terminée des accidents:", response.data.message); // Message de succès
+    console.log("Mise à jour terminée des statistiques:", response1.data.message); // Message de succès
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour:", error.message); // Message en cas d'erreur
+  }
+});
+
+// Lancer le serveur sur le port spécifié dans les variables d'environnement ou sur le port 3000 par défaut
+const PORT = process.env.PORT || 3010;
+app.listen(PORT, () => {
+  console.log(`Serveur lancé sur http://localhost:${PORT}`); // Message indiquant que le serveur est en cours d'exécution
+});--------------------------------------------------
+Chemin: ./services/cleanData.js
+Taille: 3303 octets
+Date de modification: 2025-06-23 18:28:18.696929700 +0100
+Contenu:
+// Fonction pour nettoyer les données brutes d'accidents
+const cleanAccidentData = async (rawData) => {
+    const cleanedData = []; // Tableau pour stocker les données nettoyées
+
+    // Parcourir chaque accident dans les données brutes
+    for (const accident of rawData) {
+        try {
+            // Déstructuration des propriétés nécessaires de l'accident
+            const {
+                on_street_name, // Nom de la rue
+                borough, // Arrondissement
+                crash_date, // Date de l'accident
+                crash_time, // Heure de l'accident
+                collision_id, // Identifiant unique de l'accident
+                latitude, // Latitude de l'accident
+                longitude, // Longitude de l'accident
+                number_of_persons_injured, // Nombre de personnes blessées
+                number_of_persons_killed, // Nombre de personnes tuées
+                contributing_factor_vehicle_1, // Facteur contributif du véhicule 1
+                vehicle_type_code1 // Type de véhicule impliqué
+            } = accident;
+
+            // Vérifier si les données essentielles sont présentes
+            if (!collision_id || (!on_street_name && !borough) || !longitude || !latitude) {
+                // Si l'identifiant ou les coordonnées sont manquants, ignorer cet accident
+                continue;
+            }
+
+            // Nettoyer et formater les données
+            let nameStreet = on_street_name?.trim() || borough?.trim(); // Utiliser le nom de la rue ou l'arrondissement
+            let lat = Number(latitude); // Convertir la latitude en nombre
+            let lon = Number(longitude); // Convertir la longitude en nombre
+
+            // Vérifier si les coordonnées sont valides
+            if (lat === 0 || lon === 0) {
+                continue; // Ignorer les accidents avec des coordonnées invalides
+            }
+
+            // Ajouter les données nettoyées au tableau
+            cleanedData.push({
+                collision_id, // Identifiant unique
+                crash_date: crash_date ? new Date(crash_date) : null, // Convertir la date en objet Date
+                crash_time: crash_time, // Heure de l'accident
+                on_street_name: nameStreet, // Nom de la rue ou arrondissement
+                number_of_persons_injured: Number(number_of_persons_injured) || 0, // Nombre de blessés (par défaut 0)
+                number_of_persons_killed: Number(number_of_persons_killed) || 0, // Nombre de tués (par défaut 0)
+                contributing_factor_vehicle_1: contributing_factor_vehicle_1?.trim(), // Facteur contributif nettoyé
+                vehicle_type_code1: vehicle_type_code1?.trim(), // Type de véhicule nettoyé
+                latitude: lat, // Latitude
+                longitude: lon // Longitude
+            });
+
+        } catch (error) {
+            // Gérer les erreurs lors du traitement d'un accident
+            console.warn(`Erreur traitement accident (collision_id: ${accident.collision_id || "N/A"}) : ${error.message}`);
+        }
+    }
+
+    // Retourner les données nettoyées
+    return cleanedData;
+};
+
+// Exporter la fonction pour l'utiliser dans d'autres fichiers
+module.exports = cleanAccidentData;--------------------------------------------------
+Chemin: ./services/cleardatabase.js
+Taille: 329 octets
+Date de modification: 2025-06-23 18:28:18.696929700 +0100
+Contenu:
+const mongoose = require('mongoose');
+
+async function clearDatabase() {
+  try {
+    await mongoose.connection.dropDatabase();
+    console.log('Base de données supprimée avec succès !');
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la base de données :', error);
+  }
+}
+
+clearDatabase();
+--------------------------------------------------
+Chemin: ./services/CrashperPeriod.js
+Taille: 4556 octets
+Date de modification: 2025-06-23 18:28:18.693928200 +0100
+Contenu:
+// Fonction pour calculer les statistiques des accidents pour l'année en cours
+function calculateStatistics(accidents) {
+    // Obtenir l'année actuelle
+    const currentYear = new Date().getFullYear();
+    // Définir le début de l'année (1er janvier)
+    const startOfYear = new Date(`${currentYear}-01-01T00:00:00.000Z`);
+    // Définir la fin de l'année (31 décembre)
+    const endOfYear = new Date(`${currentYear}-12-31T23:59:59.999Z`);
+
+    // Filtrer les accidents qui se sont produits pendant l'année en cours
+    const currentYearAccidents = accidents.filter(accident => {
+        const crashDate = new Date(accident.crash_date); // Convertir la date de l'accident en objet Date
+        return crashDate >= startOfYear && crashDate <= endOfYear; // Garder les accidents dans la période
+    });
+
+    // Si aucun accident n'est trouvé pour l'année en cours, retourner un tableau vide
+    if (currentYearAccidents.length === 0) {
+        return [];
+    }
+
+    // Initialiser un objet pour stocker les statistiques par zone
+    const stats = {};
+
+    // Parcourir chaque accident pour calculer les statistiques
+    currentYearAccidents.forEach(accident => {
+        const injured = accident.number_of_persons_injured || 0; // Nombre de blessés (0 par défaut)
+        const killed = accident.number_of_persons_killed || 0; // Nombre de tués (0 par défaut)
+        const on_street_name = accident.on_street_name || "Zone non spécifiée"; // Nom de la rue ou "Zone non spécifiée"
+
+        // Si la zone n'existe pas encore dans les statistiques, l'initialiser
+        if (!stats[on_street_name]) {
+            stats[on_street_name] = {
+                on_street_name, // Nom de la rue
+                totalAccidents: 0, // Nombre total d'accidents
+                totalInjured: 0, // Nombre total de blessés
+                totalKilled: 0, // Nombre total de tués
+                latitude: accident.latitude ?? 0, // Latitude de la zone (0 par défaut)
+                longitude: accident.longitude ?? 0, // Longitude de la zone (0 par défaut)
+                riskIndex: 0, // Indice de risque brut
+                indice_de_risque: 0 // Indice de risque normalisé
+            };
+        }
+
+        // Mettre à jour les statistiques pour la zone
+        stats[on_street_name].totalAccidents += 1; // Incrémenter le nombre d'accidents
+        stats[on_street_name].totalInjured += injured; // Ajouter les blessés
+        stats[on_street_name].totalKilled += killed; // Ajouter les tués
+    });
+
+    // Retourner les statistiques calculées
+    return stats;
+}
+
+// Fonction pour calculer l'indice de risque brut pour chaque zone
+function calculateRiskIndex(statsByZone) {
+    for (const zone in statsByZone) {
+        const zoneData = statsByZone[zone];
+        // Calculer l'indice de risque brut : accidents + (blessés * 2) + (tués * 5)
+        zoneData.riskIndex = 
+            zoneData.totalAccidents + (zoneData.totalInjured * 2) + (zoneData.totalKilled * 5);
+    }
+}
+
+// Fonction pour normaliser les indices de risque entre 0 et 100
+function normalizeRiskIndices(statsByZone) {
+    // Extraire tous les indices de risque
+    const riskIndices = Object.values(statsByZone).map(zone => zone.riskIndex);
+    const maxIndex = Math.max(...riskIndices); // Trouver l'indice de risque maximum
+    const minIndex = Math.min(...riskIndices); // Trouver l'indice de risque minimum
+    const range = maxIndex - minIndex || 1; // Calculer l'étendue (éviter la division par 0)
+
+    // Normaliser chaque indice de risque
+    Object.values(statsByZone).forEach(zone => {
+        zone.indice_de_risque = ((zone.riskIndex - minIndex) / range) * 100; // Normalisation entre 0 et 100
+    });
+}
+
+// Fonction principale pour analyser les accidents de l'année en cours par zone
+function analyzeCurrentYearAccidentsByZone(accidents) {
+    // Calculer les statistiques par zone
+    const statsByZone = calculateStatistics(accidents);
+    if (statsByZone.length === 0) {
+        return []; // Retourner un tableau vide si aucune statistique n'est trouvée
+    }
+
+    // Calculer l'indice de risque brut pour chaque zone
+    calculateRiskIndex(statsByZone);
+    // Normaliser les indices de risque
+    normalizeRiskIndices(statsByZone);
+
+    // Retourner les statistiques sous forme de tableau
+    return Object.values(statsByZone);
+}
+
+// Exporter la fonction pour l'utiliser dans d'autres fichiers
+module.exports = analyzeCurrentYearAccidentsByZone;--------------------------------------------------
+Chemin: ./services/Crash_N_last_year.js
+Taille: 4433 octets
+Date de modification: 2025-06-23 18:28:18.690928500 +0100
+Contenu:
+// Fonction pour analyser les accidents des N dernières années par zone
+function analyzeLastNYearsAccidentsByZone(accidents, n) {
+  // Vérifier que le paramètre n est un entier positif
+  if (!Number.isInteger(n) || n <= 0) {
+      throw new Error("Le paramètre n doit être un entier positif.");
+  }
+
+  // Définir l'année courante et les limites temporelles pour les N dernières années
+  const currentYear = new Date().getFullYear(); // Année actuelle (2025 dans ce cas)
+  const startYear = currentYear - n + 1; // Année de début (ex : si n=3, startYear = 2023)
+  const startOfPeriod = new Date(`${startYear}-01-01T00:00:00.000Z`); // Début de la période
+  const endOfPeriod = new Date(`${currentYear}-12-31T23:59:59.999Z`); // Fin de la période
+
+  // Filtrer les accidents qui se sont produits dans les N dernières années
+  const lastNYearsAccidents = accidents.filter(accident => {
+      const crashDate = new Date(accident.crash_date); // Convertir la date de l'accident en objet Date
+      return crashDate >= startOfPeriod && crashDate <= endOfPeriod; // Garder les accidents dans la période
+  });
+
+  // Si aucun accident n'est trouvé dans la période
+  if (lastNYearsAccidents.length === 0) {
+      return {
+          message: `Aucun accident trouvé pour les ${n} dernières années (de ${startYear} à ${currentYear}).`,
+          totalAccidents: 0 // Aucun accident trouvé
+      };
+  }
+
+  // Initialiser les statistiques globales
+  const stats = {
+      totalAccidents: lastNYearsAccidents.length, // Nombre total d'accidents
+      totalInjured: 0, // Nombre total de blessés
+      totalKilled: 0, // Nombre total de tués
+      accidentsByYear: {} // Statistiques par année
+  };
+
+  // Parcourir chaque accident pour calculer les statistiques
+  lastNYearsAccidents.forEach(accident => {
+      // Ajouter au total global des blessés et des tués
+      stats.totalInjured += accident.number_of_persons_injured || 0; // Ajouter les blessés (0 par défaut)
+      stats.totalKilled += accident.number_of_persons_killed || 0; // Ajouter les tués (0 par défaut)
+
+      // Extraire l'année de l'accident
+      const crashYear = new Date(accident.crash_date).getFullYear();
+      if (!stats.accidentsByYear[crashYear]) {
+          // Initialiser les statistiques pour cette année si elles n'existent pas encore
+          stats.accidentsByYear[crashYear] = {
+              totalAccidents: 0, // Nombre total d'accidents pour l'année
+              totalInjured: 0, // Nombre total de blessés pour l'année
+              totalKilled: 0, // Nombre total de tués pour l'année
+              accidentsByZone: {} // Statistiques par zone pour l'année
+          };
+      }
+
+      // Mettre à jour les statistiques pour l'année
+      const yearStats = stats.accidentsByYear[crashYear];
+      yearStats.totalAccidents += 1; // Incrémenter le nombre d'accidents
+      yearStats.totalInjured += accident.number_of_persons_injured || 0; // Ajouter les blessés
+      yearStats.totalKilled += accident.number_of_persons_killed || 0; // Ajouter les tués
+
+      // Identifier la zone de l'accident (nom de rue ou "Zone non spécifiée")
+      const zone = accident.on_street_name || "Zone non spécifiée";
+      if (!yearStats.accidentsByZone[zone]) {
+          // Initialiser les statistiques pour cette zone si elles n'existent pas encore
+          yearStats.accidentsByZone[zone] = {
+              totalAccidents: 0, // Nombre total d'accidents pour la zone
+              totalInjured: 0, // Nombre total de blessés pour la zone
+              totalKilled: 0, // Nombre total de tués pour la zone
+              longitude: accident.longitude, // Longitude de la zone
+              latitude: accident.latitude // Latitude de la zone
+          };
+      }
+
+      // Mettre à jour les statistiques pour la zone dans l'année
+      const zoneStats = yearStats.accidentsByZone[zone];
+      zoneStats.totalAccidents += 1; // Incrémenter le nombre d'accidents
+      zoneStats.totalInjured += accident.number_of_persons_injured || 0; // Ajouter les blessés
+      zoneStats.totalKilled += accident.number_of_persons_killed || 0; // Ajouter les tués
+  });
+
+  // Retourner les statistiques calculées
+  return stats;
+}
+
+// Exporter la fonction pour l'utiliser dans d'autres fichiers
+module.exports = analyzeLastNYearsAccidentsByZone;--------------------------------------------------
+Chemin: ./services/fetchNYCData.js
+Taille: 1995 octets
+Date de modification: 2025-06-23 18:28:18.698928800 +0100
+Contenu:
+// Importation du module axios pour effectuer des requêtes HTTP
+const axios = require('axios');
+
+// Fonction asynchrone pour récupérer les données d'accidents de NYC
+async function fetchNYCAccidentData() {
+    try {
+        const batchSize = 100000; // Nombre total de données à récupérer
+        const chunkSize = 10000; // Taille de chaque requête (nombre d'enregistrements par requête)
+        let requests = []; // Tableau pour stocker les requêtes
+
+        // Boucle pour créer plusieurs requêtes avec des offsets
+        for (let offset = 0; offset < batchSize; offset += chunkSize) {
+            requests.push(
+                axios.get('https://data.cityofnewyork.us/resource/h9gi-nx95.json', {
+                    params: {
+                        $limit: chunkSize, // Limite le nombre d'enregistrements par requête
+                        $offset: offset, // Décale les enregistrements pour récupérer les données par lots
+                        $where: "crash_date >= '2022-01-01T00:00:00.000'", // Filtre pour récupérer les données à partir de 2022
+                        $order: "crash_date DESC" // Trie les données par date décroissante (du plus récent au plus ancien)
+                    }
+                })
+            );
+        }
+
+        // Exécuter toutes les requêtes en parallèle
+        const responses = await Promise.all(requests);
+
+        // Extraire et concaténer les données de chaque réponse
+        const allData = responses.flatMap(response => response.data);
+
+        // Retourner toutes les données récupérées
+        return allData;
+    } catch (error) {
+        // Gérer les erreurs lors de la récupération des données
+        console.error("Erreur lors de la récupération des données :", error);
+        throw error; // Relancer l'erreur pour la gérer ailleurs
+    }
+}
+
+// Exporter la fonction pour l'utiliser dans d'autres fichiers
+module.exports = fetchNYCAccidentData;--------------------------------------------------
+Chemin: ./services/riskByHourAndZone.js
+Taille: 1648 octets
+Date de modification: 2025-06-23 18:28:18.701927800 +0100
+Contenu:
+function calculateRiskByHourAndZone(accidents) {
+    const riskByHourAndZone = {};
+
+    accidents.forEach(accident => {
+        if (!accident.crash_time || !accident.on_street_name) {
+            return; // Ignore les accidents sans heure ou sans rue
+        }
+
+        const hour = accident.crash_time.trim().substring(0, 5); // Extraction de "hh:mm"
+        const zone = accident.on_street_name.trim();
+
+        if (!riskByHourAndZone[hour]) {
+            riskByHourAndZone[hour] = {};
+        }
+
+        if (!riskByHourAndZone[hour][zone]) {
+            riskByHourAndZone[hour][zone] = {
+                totalAccidents: 0,
+                totalInjuries: 0,
+                totalDeaths: 0,
+                longitude: parseFloat(accident.longitude) || 0,
+                latitude: parseFloat(accident.latitude) || 0
+            };
+        }
+
+        riskByHourAndZone[hour][zone].totalAccidents++;
+        riskByHourAndZone[hour][zone].totalInjuries += parseInt(accident.number_of_persons_injured) || 0;
+        riskByHourAndZone[hour][zone].totalDeaths += parseInt(accident.number_of_persons_killed) || 0;
+    });
+
+    // Calcul du score de risque
+    Object.keys(riskByHourAndZone).forEach(hour => {
+        Object.keys(riskByHourAndZone[hour]).forEach(zone => {
+            const risk = riskByHourAndZone[hour][zone];
+            const severityScore = (risk.totalAccidents * 2) + (risk.totalInjuries * 1.5) + (risk.totalDeaths * 3);
+            riskByHourAndZone[hour][zone].riskScore = severityScore;
+        });
+    });
+
+    return riskByHourAndZone;
+}
+
+module.exports = calculateRiskByHourAndZone;
+--------------------------------------------------
+Chemin: ./services/riskByZone.js
+Taille: 2488 octets
+Date de modification: 2025-06-23 18:28:18.702929400 +0100
+Contenu:
+// Fonction pour calculer le risque par zone à partir des données d'accidents
+function calculateRiskByZone(accidents) {
+    // Utiliser le nom de la rue (on_street_name) comme identifiant de la zone
+    const riskByZone = accidents.reduce((acc, accident) => {
+        const zone = accident.on_street_name; // Identifier la zone par le nom de la rue
+
+        // Si la zone n'existe pas encore dans l'objet accumulé, l'initialiser
+        if (!acc[zone]) {
+            acc[zone] = {
+                accidentsCount: 0, // Nombre total d'accidents dans la zone
+                risque: 0, // Indice de risque pour la zone
+                injuries: 0, // Nombre total de blessés dans la zone
+                deaths: 0, // Nombre total de décès dans la zone
+                latitude: accident.latitude, // Latitude de la zone
+                longitude: accident.longitude, // Longitude de la zone
+                freq: 0 // Fréquence des accidents dans la zone
+            };
+        }
+
+        // Mettre à jour les statistiques pour la zone
+        acc[zone].accidentsCount += 1; // Incrémenter le nombre d'accidents
+        acc[zone].injuries += accident.number_of_persons_injured; // Ajouter le nombre de blessés
+        acc[zone].deaths += accident.number_of_persons_killed; // Ajouter le nombre de décès
+
+        return acc; // Retourner l'objet accumulé
+    }, {}); // Initialiser l'objet accumulé comme un objet vide
+
+    // Calculer le nombre total d'accidents pour toutes les zones
+    let totalAccidents = 0;
+    Object.keys(riskByZone).forEach(zone => {
+        totalAccidents += riskByZone[zone].accidentsCount; // Ajouter le nombre d'accidents de chaque zone
+    });
+
+    // Calculer la fréquence et l'indice de risque pour chaque zone
+    Object.keys(riskByZone).forEach(zone => {
+        // Fréquence des accidents dans la zone (proportion par rapport au total)
+        riskByZone[zone].freq = (riskByZone[zone].accidentsCount / totalAccidents);
+        // Calcul de l'indice de risque : accidents + (blessés * 3) + (décès * 5)
+        riskByZone[zone].risque = (
+            riskByZone[zone].accidentsCount +
+            riskByZone[zone].injuries * 3 +
+            riskByZone[zone].deaths * 5
+        );
+    });
+
+    // Retourner l'objet contenant les statistiques de risque par zone
+    return riskByZone;
+}
+
+// Exporter la fonction pour l'utiliser dans d'autres fichiers
+module.exports = calculateRiskByZone;--------------------------------------------------
+Chemin: ./services/Topdangerous.js
+Taille: 1413 octets
+Date de modification: 2025-06-23 18:28:18.694929100 +0100
+Contenu:
+// Fonction pour obtenir les N zones les plus dangereuses à partir des données d'accidents
+function getTopNDangerousZones(accidentsByZone, n) {
+    // Convertir l'objet des zones en tableau d'entrées, trier par indice de risque décroissant, et prendre les N premiers
+    const sortedZones = Object.entries(accidentsByZone) // Convertir l'objet en tableau [clé, valeur]
+        .sort(([, a], [, b]) => (b.indice_de_risque || 0) - (a.indice_de_risque || 0)) // Trier par indice de risque décroissant
+        .slice(0, n); // Garder uniquement les N premières zones
+
+    // Mapper les zones triées pour formater les données de sortie
+    return sortedZones.map(([on_street_name, data]) => ({
+        on_street_name: data.on_street_name, // Nom de la rue ou zone
+        totalAccidents: data.totalAccidents, // Nombre total d'accidents
+        totalInjured: data.totalInjured, // Nombre total de blessés
+        totalKilled: data.totalKilled, // Nombre total de tués
+        riskIndex: data.riskIndex, // Indice brut de risque
+        latitude: data.latitude, // Latitude de la zone
+        longitude: data.longitude, // Longitude de la zone
+        riskPercentage: Number((data.indice_de_risque || 0).toFixed(2)) // Indice de risque normalisé (arrondi à 2 décimales)
+    }));
+}
+
+// Exporter la fonction pour l'utiliser dans d'autres fichiers
+module.exports = getTopNDangerousZones;

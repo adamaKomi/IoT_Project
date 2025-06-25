@@ -6,10 +6,4 @@ const router = express.Router();
 // Route pour obtenir toutes les alertes de congestion actives
 router.get("/congestion", getCongestionAlerts);
 
-// Route pour s'abonner aux alertes d'une zone géographique
-router.post("/subscribe", subscribeToArea);
-
-// Route pour se désabonner des alertes
-router.post("/unsubscribe", unsubscribeFromArea);
-
 module.exports = router;

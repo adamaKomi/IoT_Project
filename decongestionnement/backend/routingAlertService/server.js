@@ -16,7 +16,7 @@ console.log(`Configuration du port: ${PORT}`);
 
 // Création du serveur HTTP
 const server = http.createServer(app);
-
+ 
 // Configuration du serveur WebSocket avec Socket.io
 const io = socketIo(server, {
   cors: {

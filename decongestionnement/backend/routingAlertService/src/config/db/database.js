@@ -1,8 +1,9 @@
+require("dotenv").config(); // Charger les variables d'environnement depuis le fichier .env
 const { MongoClient } = require("mongodb");
 
 // URI de connexion à MongoDB
 const uri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017";
-const dbName = "congestion_db"; 
+const dbName = process.env.CONGESTION_DB_NAME || "congestion_db";
 
 let client;
 let db;

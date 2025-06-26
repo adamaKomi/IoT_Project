@@ -4,11 +4,11 @@
   "description": "Application to map accidents with risk zones",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node src/utils/import-data.js && node src/utils/populate-risky-routes.js && node src/server.js",
     "import-data": "node src/import-data.js",
     "populate-risky-routes": "node src/populate-risky-routes.js",
     "client": "cd client && npm start",
-    "dev": "concurrently \"npm start\" \"npm run client\""
+    "dev": "node src/utils/import-data.js && node src/utils/populate-risky-routes.js && nodemon src/server.js"
   },
   "dependencies": {
     "axios": "^1.8.4",
@@ -20,6 +20,7 @@
     "react-icons": "^5.5.0"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.10"
   }
 }

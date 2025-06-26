@@ -16,10 +16,10 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
-}));
+})); 
 
 // Middleware pour parser le JSON
-app.use(express.json());
+app.use(express.json()); 
 
 // Monter les routes
 app.use('/', accidentRoutes);
@@ -103,8 +103,8 @@ async function refreshData() {
 
 // Exécuter la mise à jour toutes les 5 minutes
 setInterval(refreshData, 300000);
-
+// Initialiser la base de données et importer les données initiales
 // Démarrer le serveur
 app.listen(port, () => {
-  console.log(`Serveur démarré sur le port ${port}`);
+  console.log(`✅ Serveur démarré sur le port ${port}`);
 });

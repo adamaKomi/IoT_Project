@@ -1,7 +1,9 @@
+require("dotenv").config();
 const { MongoClient } = require("mongodb");
 
-const URI = "mongodb://127.0.0.1:27017";
-const DB_NAME = "sumo_traffic";
+
+const URI = process.env.SUMO_TRAFFIC_DB_URI || "mongodb://127.0.0.1:27017";
+const DB_NAME = process.env.SUMO_TRAFFIC_DB_NAME || "sumo_traffic";
 
 let db;
 
